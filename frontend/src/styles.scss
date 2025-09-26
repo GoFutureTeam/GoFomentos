@@ -1,154 +1,43 @@
 // Importar normalize.css para reset CSS
 @import 'normalize.css';
 
-// ====================
-// SISTEMA DE CORES MODERNO
-// ====================
-
-// Configuração forçada para modo claro
+// =============
+// VARIÁVEIS CSS
+// =============
 :root {
-  color-scheme: light;
-}
-
-// Modo escuro apenas quando explicitamente definido
-[data-theme="dark"] {
-  color-scheme: dark;
-}
-
-// ====================
-// VARIÁVEIS CSS - MODO CLARO
-// ====================
-:root {
-  // Cores Base
-  --background: #FFFFFF;
-  --foreground: #0F172A;
+  // Cores Base da sua paleta
+  --background: #F1F2EE;          // O seu F1F2EE (Quase branco)
+  --foreground: #435058;          // O seu 435058 (Azul-acinzentado escuro para textos)
 
   // Cards e Popovers
-  --card: #FFFFFF;
-  --card-foreground: #0F172A;
-  --popover: #FFFFFF;
-  --popover-foreground: #0F172A;
+  --card: #FFFFFF;                // Branco puro para contraste nos cards
+  --card-foreground: #435058;      // Texto principal dentro dos cards
 
-  // Cores Primárias
-  --primary: #1E293B;
-  --primary-foreground: #F8FAFC;
+  // Cores Primárias (Ação principal)
+  --primary: #435058;              // O seu 435058 como cor primária
+  --primary-foreground: #FFFFFF;  // Texto branco para contraste com o primário escuro
 
-  // Cores Secundárias
-  --secondary: #F1F5F9;
-  --secondary-foreground: #1E293B;
+  // Cores Secundárias (Elementos de suporte)
+  --secondary: #E2E8F0;            // Um cinza neutro para fundos secundários
+  --secondary-foreground: #435058;
 
   // Cores Neutras
   --muted: #F1F5F9;
-  --muted-foreground: #64748B;
+  --muted-foreground: #848C8E;     // O seu 848C8E (Cinza médio) para textos menos importantes
 
-  // Cores de Destaque
-  --accent: #F1F5F9;
-  --accent-foreground: #1E293B;
+  // Cores de Destaque (Accent)
+  --accent: #DCF763;               // O seu DCF763 (Verde limão) para destaque
+  --accent-foreground: #435058;    // Texto escuro para contraste com o verde limão
 
   // Cores de Sistema
   --destructive: #EF4444;
   --destructive-foreground: #F8FAFC;
-  --border: #E2E8F0;
-  --input: #E2E8F0;
-  --ring: #0F172A;
+  --border: #E2E8F0;              // Bordas sutis
+  --input: #E2E8F0;                // Borda dos inputs
+  --ring: #435058;                 // Cor de foco, usando sua cor primária
 
-  // Sidebar - Modo Claro
-  --sidebar-background: #FAFAFA;
-  --sidebar-foreground: #404040;
-  --sidebar-primary: #171717;
-  --sidebar-primary-foreground: #FAFAFA;
-  --sidebar-accent: #F5F5F5;
-  --sidebar-accent-foreground: #171717;
-  --sidebar-border: #E5E5E5;
-  --sidebar-ring: #3B82F6;
-
-  // CORES BRAND ESPECÍFICAS
-  --brand-dark: #435058;           // rgba(67,80,88,1) - Cor principal escura
-  --brand-light: #F8F8F8;         // rgba(248,248,248,1) - Cor principal clara
-  --brand-accent: #DCF763;         // #DCF763 - Verde limão accent
-  --brand-accent-alpha: rgba(220,247,99,0.65); // Verde limão transparente
-
-  // CORES DE FUNDO
-  --card-background: rgba(217,217,217,0.15); // Fundo dos cards
-  --input-placeholder: #B1B1B1;   // Placeholder dos inputs
-  --chat-background: #F8F8F8;     // Fundo do chat
-
-  // CORES DE COMPATIBILIDADE (CompatibilityBadge)
-  --compatibility-low: #D33232;    // Vermelho - baixa compatibilidade
-  --compatibility-medium: #FFFF00; // Amarelo - média compatibilidade
-  --compatibility-high: #008000;   // Verde - alta compatibilidade
-
-  // CORES DE SOMBRA
-  --shadow-light: rgba(0,0,0,0.25); // Sombras dos cards
-  --shadow-hover: rgba(0,0,0,0.3);  // Sombras no hover
-}
-
-// ====================
-// VARIÁVEIS CSS - MODO ESCURO
-// ====================
-[data-theme="dark"] {
-  // Cores Base
-  --background: #0F172A;
-  --foreground: #F8FAFC;
-
-  // Cards e Popovers
-  --card: #0F172A;
-  --card-foreground: #F8FAFC;
-  --popover: #0F172A;
-  --popover-foreground: #F8FAFC;
-
-  // Cores Primárias
-  --primary: #F8FAFC;
-  --primary-foreground: #1E293B;
-
-  // Cores Secundárias
-  --secondary: #1E293B;
-  --secondary-foreground: #F8FAFC;
-
-  // Cores Neutras
-  --muted: #1E293B;
-  --muted-foreground: #94A3B8;
-
-  // Cores de Destaque
-  --accent: #1E293B;
-  --accent-foreground: #F8FAFC;
-
-  // Cores de Sistema
-  --destructive: #DC2626;
-  --destructive-foreground: #F8FAFC;
-  --border: #1E293B;
-  --input: #1E293B;
-  --ring: #CBD5E1;
-
-  // Sidebar - Modo Escuro
-  --sidebar-background: #171717;
-  --sidebar-foreground: #F5F5F5;
-  --sidebar-primary: #3B82F6;
-  --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #262626;
-  --sidebar-accent-foreground: #F5F5F5;
-  --sidebar-border: #262626;
-  --sidebar-ring: #3B82F6;
-
-  // CORES BRAND ESPECÍFICAS (adaptadas para modo escuro)
-  --brand-dark: #525E66;           // Tom mais claro da cor escura no dark mode
-  --brand-light: #1A1A1A;         // Tom escuro da cor clara no dark mode
-  --brand-accent: #DCF763;         // Verde limão mantido igual (destaque)
-  --brand-accent-alpha: rgba(220,247,99,0.65); // Verde limão transparente
-
-  // CORES DE FUNDO (adaptadas para modo escuro)
-  --card-background: rgba(67,80,88,0.25); // Fundo dos cards mais escuro
-  --input-placeholder: #6B7280;   // Placeholder mais claro para dark mode
-  --chat-background: #1E293B;     // Fundo do chat escuro
-
-  // CORES DE COMPATIBILIDADE (mantidas iguais)
-  --compatibility-low: #DC2626;    // Vermelho ajustado para dark mode
-  --compatibility-medium: #EAB308; // Amarelo ajustado para dark mode
-  --compatibility-high: #16A34A;   // Verde ajustado para dark mode
-
-  // CORES DE SOMBRA (adaptadas para modo escuro)
-  --shadow-light: rgba(255,255,255,0.1); // Sombras claras no dark mode
-  --shadow-hover: rgba(255,255,255,0.15); // Sombras hover no dark mode
+  // A cor BFB7B6 pode ser usada para fundos específicos
+  --card-alternative-background: #BFB7B6;
 }
 
 /*

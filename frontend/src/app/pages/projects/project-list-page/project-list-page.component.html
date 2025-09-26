@@ -1,1 +1,35 @@
-<p>project-list-page works!</p>
+<div class="container">
+  <header class="page-header">
+    <h1>Meus Projetos</h1>
+    <button class="botao-principal" routerLink="/projects/new">
+      + Novo Projeto
+    </button>
+  </header>
+
+  <div *ngIf="projetos$ | async as projetos; else loading">
+
+    <div *ngIf="projetos.length === 0" class="empty-state">
+      <h2>Nenhum projeto encontrado</h2>
+      <p>Você ainda não cadastrou nenhum projeto. Clique em "Novo Projeto" para começar.</p>
+    </div>
+
+    <div *ngIf="projetos.length > 0" class="project-grid">
+      <div class="project-card" *ngFor="let projeto of projetos">
+        <h3>{{ projeto.nomeProjeto }}</h3>
+        <p class="project-description">{{ projeto.descricao }}</p>
+        <div class="project-footer">
+          <span class="project-area">{{ projeto.areaAtuacao }}</span>
+          <span class="project-value">{{ projeto.valorSolicitado | currency:'BRL':'symbol':'1.2-2' }}</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <ng-template #loading>
+    <div class="loading-state">
+      <p>Carregando seus projetos...</p>
+      </div>
+  </ng-template>
+
+</div>
