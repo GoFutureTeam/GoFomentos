@@ -1,0 +1,37 @@
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { ProjectData } from '@/hooks/useMatching';
+
+interface MonitoringSignupProps {
+  projectData?: ProjectData;
+}
+
+export const MonitoringSignup: React.FC<MonitoringSignupProps> = ({ projectData }) => {
+  const navigate = useNavigate();
+
+  const handleNavigateToSignup = () => {
+    navigate('/email-signup', { 
+      state: { projectData } 
+    });
+  };
+
+  return (
+    <section className="bg-[rgba(67,80,88,1)] shadow-[0px_4px_6px_2px_rgba(0,0,0,0.25)] mt-[47px] px-[70px] py-[42px] rounded-[39px] max-md:max-w-full max-md:mt-10 max-md:px-5">
+      <div className="gap-5 flex max-md:flex-col max-md:items-stretch">
+        <div className="flex flex-col items-stretch w-[67%] max-md:w-full max-md:ml-0">
+          <h2 className="text-white text-[26px] font-extrabold self-stretch my-auto max-md:max-w-full max-md:mt-10">
+            Quer ser avisado automaticamente sempre que um edital compatível surgir?
+          </h2>
+        </div>
+        <div className="flex flex-col items-stretch w-[33%] ml-5 max-md:w-full max-md:ml-0">
+          <button 
+            onClick={handleNavigateToSignup}
+            className="bg-neutral-50 shadow-[0px_4px_6px_2px_rgba(0,0,0,0.25)] grow text-xl text-[rgba(67,80,88,1)] font-bold text-center w-full pt-[17px] pb-[29px] px-[53px] rounded-[35px] max-md:mt-10 max-md:px-5 hover:bg-gray-100 transition-colors"
+          >
+            Cadastrar para monitoramento!
+          </button>
+        </div>
+      </div>
+    </section>
+  );
+};
