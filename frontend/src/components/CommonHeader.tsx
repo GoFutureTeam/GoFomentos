@@ -21,7 +21,7 @@ const CommonHeader: React.FC<CommonHeaderProps> = ({
 }) => {
   const location = useLocation();
 
-  // Gerar breadcrumb baseado na rota atual
+  // Gerar breadcrumb baseado na rota atual (sem o item Inicio)
   const getBreadcrumbItems = () => {
     const path = location.pathname.split("/").filter(Boolean);
 
@@ -52,11 +52,8 @@ const CommonHeader: React.FC<CommonHeaderProps> = ({
       };
     });
 
-    // Adicionar "Início" como primeiro item
-    return [
-      { label: "Início", href: "/", isActive: path.length === 0 },
-      ...breadcrumbItems,
-    ];
+    // Retornar apenas os breadcrumbItems, SEM adicionar "Inicio"
+    return breadcrumbItems;
   };
   const breadcrumbItems = getBreadcrumbItems();
   return (
@@ -75,35 +72,37 @@ const CommonHeader: React.FC<CommonHeaderProps> = ({
           className="px-5 py-12 lg:py-16 relative"
         >
           <div className="w-full max-w-[1279px] mx-auto px-0 lg:px-5">
-            <Breadcrumb className="mb-8">
-              <BreadcrumbList className="text-[rgba(248,248,248,1)] text-base sm:text-lg font-medium">
-                {breadcrumbItems
-                  .map((item, index) => [
-                    <BreadcrumbItem key={`item-${index}`}>
-                      {item.isActive ? (
-                        <BreadcrumbPage className="text-[rgba(248,248,248,1)]">
-                          {item.label}
-                        </BreadcrumbPage>
-                      ) : (
-                        <BreadcrumbLink
-                          asChild
-                          className="text-[rgba(248,248,248,1)] hover:text-white"
-                        >
-                          <Link to={item.href}>{item.label}</Link>
-                        </BreadcrumbLink>
-                      )}
-                    </BreadcrumbItem>,
-                    index < breadcrumbItems.length - 1 && (
-                      <BreadcrumbSeparator
-                        key={`separator-${index}`}
-                        className="text-[rgba(248,248,248,1)]"
-                      />
-                    ),
-                  ])
-                  .flat()
-                  .filter(Boolean)}
-              </BreadcrumbList>
-            </Breadcrumb>
+            {breadcrumbItems.length > 0 && (
+              <Breadcrumb className="mb-8">
+                <BreadcrumbList className="text-[rgba(248,248,248,1)] text-base sm:text-lg font-medium">
+                  {breadcrumbItems
+                    .map((item, index) => [
+                      <BreadcrumbItem key={`item-${index}`}>
+                        {item.isActive ? (
+                          <BreadcrumbPage className="text-[rgba(248,248,248,1)]">
+                            {item.label}
+                          </BreadcrumbPage>
+                        ) : (
+                          <BreadcrumbLink
+                            asChild
+                            className="text-[rgba(248,248,248,1)] hover:text-white"
+                          >
+                            <Link to={item.href}>{item.label}</Link>
+                          </BreadcrumbLink>
+                        )}
+                      </BreadcrumbItem>,
+                      index < breadcrumbItems.length - 1 && (
+                        <BreadcrumbSeparator
+                          key={`separator-${index}`}
+                          className="text-[rgba(248,248,248,1)]"
+                        />
+                      ),
+                    ])
+                    .flat()
+                    .filter(Boolean)}
+                </BreadcrumbList>
+              </Breadcrumb>
+            )}
 
             <div className="flex gap-8 flex-col lg:flex-row items-center">
               <div className="w-full lg:w-[65%]">

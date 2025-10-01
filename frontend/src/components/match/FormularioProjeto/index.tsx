@@ -21,6 +21,7 @@ type ProjectFormData = z.infer<typeof projectFormSchema>;
 
 export const ProjectForm: React.FC<ProjetoProps> = ({ projetoInicial }) => {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [projetoSalvo, setProjetoSalvo] = useState(false);
   const navigate = useNavigate();
   const { autenticado } = useAutenticacaoPortugues();
   const { salvarProjeto, salvando } = useProjetoPortugues();
@@ -52,6 +53,7 @@ export const ProjectForm: React.FC<ProjetoProps> = ({ projetoInicial }) => {
         companyActivities: projetoInicial.descricao,
         cnae: ''
       });
+      setProjetoSalvo(false);
     }
   }, [projetoInicial, reset]);
   
@@ -67,11 +69,8 @@ export const ProjectForm: React.FC<ProjetoProps> = ({ projetoInicial }) => {
       dataAtualizacao: new Date().toISOString()
     };
     salvarProjeto(projetoData);
-    
-    // Redirecionar para a página de Meus Projetos após salvar
-    setTimeout(() => {
-      navigate('/meus-projetos');
-    }, 500);
+    setProjetoSalvo(true);
+    // Usuário permanece no formulário para analisar compatibilidade
   };
   
   const onSubmit = async (data: ProjectFormData) => {
@@ -125,8 +124,13 @@ export const ProjectForm: React.FC<ProjetoProps> = ({ projetoInicial }) => {
                   <textarea 
                     id="projectObjective"
                     {...register('projectObjective')}
-                    className="bg-transparent border-none outline-none w-full resize-none text-[#000001] placeholder:text-[rgba(67,80,88,1)] min-h-[60px]"
+                    className="bg-transparent border-none outline-none w-full resize-y text-[#000001] placeholder:text-[rgba(67,80,88,1)] min-h-[60px] overflow-hidden"
                     placeholder="Resuma a principal meta que o projeto deseja alcançar"
+                    onInput={(e) => {
+                      const target = e.target as HTMLTextAreaElement;
+                      target.style.height = 'auto';
+                      target.style.height = target.scrollHeight + 'px';
+                    }}
                   />
                 </div>
                 {errors.projectObjective && (
@@ -161,8 +165,13 @@ export const ProjectForm: React.FC<ProjetoProps> = ({ projetoInicial }) => {
                   <textarea 
                     id="companyActivities"
                     {...register('companyActivities')}
-                    className="bg-transparent border-none outline-none w-full resize-none text-[#000001] placeholder:text-[rgba(67,80,88,1)] min-h-[60px]"
+                    className="bg-transparent border-none outline-none w-full resize-y text-[#000001] placeholder:text-[rgba(67,80,88,1)] min-h-[60px] overflow-hidden"
                     placeholder="Descreva brevemente o que sua empresa faz"
+                    onInput={(e) => {
+                      const target = e.target as HTMLTextAreaElement;
+                      target.style.height = 'auto';
+                      target.style.height = target.scrollHeight + 'px';
+                    }}
                   />
                 </div>
                 {errors.companyActivities && (
@@ -207,10 +216,14 @@ export const ProjectForm: React.FC<ProjetoProps> = ({ projetoInicial }) => {
                   <button 
                     type="button" 
                     onClick={handleSaveProjeto}
-                    disabled={isSubmitting || salvando}
-                    className="bg-[rgba(67,80,88,1)] self-center flex items-center text-white font-semibold text-center justify-center px-[24px] py-[16px] rounded-[24px] max-md:px-4 hover:bg-[rgba(67,80,88,0.9)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-base"
+                    disabled={isSubmitting || salvando || projetoSalvo}
+                    className={`self-center flex items-center text-white font-semibold text-center justify-center px-[24px] py-[16px] rounded-[24px] max-md:px-4 transition-colors disabled:cursor-not-allowed text-base ${
+                      projetoSalvo 
+                        ? 'bg-gray-400 cursor-not-allowed' 
+                        : 'bg-[rgba(67,80,88,1)] hover:bg-[rgba(67,80,88,0.9)]'
+                    }`}
                   >
-                    {salvando ? 'Salvando...' : projetoInicial ? 'Atualizar Projeto' : 'Salvar Projeto'}
+                    {projetoSalvo ? 'Salvo' : salvando ? 'Salvando...' : projetoInicial ? 'Atualizar Projeto' : 'Salvar Projeto'}
                   </button>
                 )}
                 

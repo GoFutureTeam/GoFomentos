@@ -1,12 +1,4 @@
 import React from "react";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
 const HeroSection: React.FC = () => {
   return (
     <section className="bg-[rgba(67,80,88,1)]">
@@ -21,23 +13,6 @@ const HeroSection: React.FC = () => {
         className="px-5 py-12 lg:py-16 relative lg:px-20"
       >
         <div className="w-full max-w-[1279px] mx-auto">
-          <Breadcrumb className="mb-8">
-            <BreadcrumbList className="text-white text-base sm:text-lg font-medium">
-              <BreadcrumbItem>
-                <BreadcrumbLink
-                  href="/"
-                  className="text-white hover:text-gray-200"
-                >
-                  Início
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator className="text-white" />
-              <BreadcrumbItem>
-                <BreadcrumbPage className="text-white">Editais</BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
-
           <div className="flex gap-8 flex-col lg:flex-row items-center">
             <div className="w-full lg:w-[65%]">
               <h1 className="text-white text-4xl sm:text-5xl font-black leading-tight tracking-wide mb-6">

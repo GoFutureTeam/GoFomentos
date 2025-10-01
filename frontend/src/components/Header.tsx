@@ -41,12 +41,6 @@ const Header = () => {
             href="/"
             className="hover:opacity-80 transition-opacity whitespace-nowrap"
           >
-            Inicio
-          </a>
-          <a
-            href="/"
-            className="hover:opacity-80 transition-opacity whitespace-nowrap"
-          >
             Editais
           </a>
           <a

@@ -1,5 +1,3 @@
-import { apiCliente } from './apiCliente'; // Supondo que você tenha um cliente axios configurado
-
 // Interface para os dados do projeto
 export interface DadosProjeto {
   id?: string;
@@ -27,6 +25,19 @@ interface RespostaApi<T> {
  */
 class ServicoApiProjeto {
   private urlBase = '/api/v1';
+  private projetosLocais: DadosProjeto[] = [];
+  
+  constructor() {
+    // Carregar projetos do localStorage ao inicializar
+    const projetosSalvos = localStorage.getItem('projetos');
+    if (projetosSalvos) {
+      this.projetosLocais = JSON.parse(projetosSalvos);
+    }
+  }
+  
+  private salvarNoLocalStorage() {
+    localStorage.setItem('projetos', JSON.stringify(this.projetosLocais));
+  }
   
   /**
    * Busca todos os projetos do usuário autenticado
@@ -40,36 +51,9 @@ class ServicoApiProjeto {
       // Simulação de resposta da API
       await new Promise(resolve => setTimeout(resolve, 500));
       
+      // Retornar apenas projetos salvos localmente
       return {
-        dados: [
-          {
-            id: '1',
-            nomeProjeto: 'Projeto de Educação Ambiental',
-            descricao: 'Iniciativa para conscientização sobre preservação ambiental em escolas públicas',
-            objetivoPrincipal: 'Conscientizar estudantes sobre a importância da preservação ambiental',
-            areaProjeto: 'Educação Ambiental',
-            orcamento: 50000,
-            dataCriacao: '2023-10-15'
-          },
-          {
-            id: '2',
-            nomeProjeto: 'Inclusão Digital para Idosos',
-            descricao: 'Programa de capacitação em tecnologia para pessoas da terceira idade',
-            objetivoPrincipal: 'Capacitar idosos no uso de tecnologias digitais',
-            areaProjeto: 'Inclusão Digital',
-            orcamento: 35000,
-            dataCriacao: '2023-11-20'
-          },
-          {
-            id: '3',
-            nomeProjeto: 'Horta Comunitária',
-            descricao: 'Implementação de horta urbana para produção de alimentos orgânicos',
-            objetivoPrincipal: 'Criar espaço de produção de alimentos orgânicos em área urbana',
-            areaProjeto: 'Agricultura Urbana',
-            orcamento: 25000,
-            dataCriacao: '2023-12-05'
-          }
-        ],
+        dados: this.projetosLocais,
         sucesso: true,
         mensagem: 'Projetos carregados com sucesso'
       };
@@ -126,7 +110,7 @@ class ServicoApiProjeto {
    */
   async salvarProjeto(dadosProjeto: DadosProjeto): Promise<RespostaApi<DadosProjeto>> {
     try {
-      let resposta;
+      let projetoSalvo: DadosProjeto;
       
       // Em uma implementação real, isso seria uma chamada à API
       if (dadosProjeto.id) {
@@ -135,30 +119,42 @@ class ServicoApiProjeto {
         
         // Simulação de resposta da API para atualização
         await new Promise(resolve => setTimeout(resolve, 400));
-        resposta = {
-          data: {
+        
+        const index = this.projetosLocais.findIndex(p => p.id === dadosProjeto.id);
+        if (index !== -1) {
+          this.projetosLocais[index] = {
             ...dadosProjeto,
             dataAtualizacao: new Date().toISOString()
-          }
-        };
+          };
+          projetoSalvo = this.projetosLocais[index];
+        } else {
+          projetoSalvo = {
+            ...dadosProjeto,
+            dataAtualizacao: new Date().toISOString()
+          };
+        }
       } else {
         // Cria um novo projeto
         // resposta = await apiCliente.post(`${this.urlBase}/projetos`, dadosProjeto);
         
         // Simulação de resposta da API para criação
         await new Promise(resolve => setTimeout(resolve, 400));
-        resposta = {
-          data: {
-            ...dadosProjeto,
-            id: Math.random().toString(36).substring(2, 15),
-            dataCriacao: new Date().toISOString(),
-            dataAtualizacao: new Date().toISOString()
-          }
+        
+        projetoSalvo = {
+          ...dadosProjeto,
+          id: Math.random().toString(36).substring(2, 15),
+          dataCriacao: new Date().toISOString(),
+          dataAtualizacao: new Date().toISOString()
         };
+        
+        this.projetosLocais.push(projetoSalvo);
       }
       
+      // Salvar no localStorage
+      this.salvarNoLocalStorage();
+      
       return {
-        dados: resposta.data,
+        dados: projetoSalvo,
         sucesso: true,
         mensagem: dadosProjeto.id ? 'Projeto atualizado com sucesso' : 'Projeto criado com sucesso'
       };

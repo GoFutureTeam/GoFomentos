@@ -12,15 +12,11 @@ const HeroSection: React.FC<HeroSectionProps> = ({ title, description, editalNum
       <div 
         className="px-5 lg:px-20 py-12 lg:py-16 relative"
         style={{
-          backgroundImage: 'url(/lovable-uploads/fc8e9f15-312d-4438-9834-cd7b3554cb1d.png)',
           backgroundSize: 'auto 100%',
           backgroundPosition: 'right center',
           backgroundRepeat: 'no-repeat'
         }}
       >
-        <nav className="text-[rgba(248,248,248,1)] text-base sm:text-lg font-medium mb-8" aria-label="Breadcrumb">
-          Inicio &gt; Editais
-        </nav>
         <div className="flex gap-8 flex-col lg:flex-row items-center">
           <div className="w-full lg:w-[65%]">
             <h1 className="text-[rgba(248,248,248,1)] text-4xl sm:text-5xl lg:text-6xl font-black leading-tight tracking-wide mb-6">
