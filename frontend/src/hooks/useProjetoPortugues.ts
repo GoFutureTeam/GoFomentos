@@ -14,7 +14,7 @@ export const useProjetoPortugues = () => {
   
   // Consulta para listar projetos
   const { 
-    data: projetos = [], 
+    data: projetos = [], // comentario 
     isLoading: carregando, 
     error: erro 
   } = useQuery({
