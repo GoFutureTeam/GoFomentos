@@ -1,0 +1,3 @@
+# todos so caches e o env
+__pycache__/
+.env
