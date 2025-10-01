@@ -125,6 +125,37 @@ async def fetch_editais(request: FetchEditaisRequest, background_tasks: Backgrou
             detail=f"Error fetching editais: {str(e)}"
         )
 
+@router.post("/editais", response_model=Edital, status_code=status.HTTP_201_CREATED)
+async def create_edital(edital: EditalCreate, current_user: User = Depends(get_current_user)):
+    """
+    Cria um novo edital manualmente
+    
+    Campos obrigatórios:
+    - apelido_edital: Nome/título do edital
+    - link: URL do edital
+    
+    Campos opcionais (todos os demais):
+    - financiador_1, financiador_2: Órgãos financiadores
+    - area_foco: Área de foco do edital
+    - tipo_proponente: Tipo de proponente aceito
+    - empresas_que_podem_submeter: Descrição das empresas elegíveis
+    - duracao_min_meses, duracao_max_meses: Duração do projeto
+    - valor_min_R$, valor_max_R$: Faixa de valores
+    - tipo_recurso: Tipo de recurso (reembolsável, não reembolsável, etc)
+    - recepcao_recursos: Forma de recepção dos recursos
+    - custeio, capital: Tipos de despesas permitidas
+    - contrapartida_min_%, contrapartida_max_%: Percentual de contrapartida
+    - tipo_contrapartida: Tipo de contrapartida exigida
+    - data_inicial_submissao: Data de abertura (YYYY-MM-DD)
+    - data_final_submissao: Data de encerramento (YYYY-MM-DD)
+    - data_resultado: Data prevista para resultado (YYYY-MM-DD)
+    - descricao_completa: Descrição detalhada do edital
+    - origem: Origem/fonte do edital
+    - observacoes: Observações adicionais
+    - status: Status do edital ('aberto', 'fechado', 'em_breve')
+    """
+    return await MongoService.create_edital(edital)
+
 @router.get("/editais", response_model=List[Edital])
 async def read_editais(skip: int = 0, limit: int = 100, current_user: User = Depends(get_current_user)):
     """

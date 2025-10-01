@@ -1,3 +1,7 @@
 # todos so caches e o env
 __pycache__/
 .env
+
+# Arquivos temporários e saídas do processador
+temp/
+output/
