@@ -1,0 +1,69 @@
+# docker-compose.yml (Compose v2 - sem "version:")
+services:
+  # MongoDB
+  mongo:
+    image: mongo:6.0
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=password
+    networks:
+      - app-network
+    restart: unless-stopped
+    # Dica: healthcheck com mongosh nem sempre vem no image oficial.
+    # Se quiser condicionar a API à saúde do Mongo, prefira script wait-for no container da API.
+
+  # ChromaDB
+  chroma:
+    image: ghcr.io/chroma-core/chroma:latest
+    ports:
+      - "8001:8001"
+    volumes:
+      - chroma_data:/chroma/chroma
+    environment:
+      - ALLOW_RESET=true
+      - CHROMA_SERVER_HOST=0.0.0.0
+      - CHROMA_SERVER_PORT=8001
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  # API Backend
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    # ⚠️ Em Windows, esse bind mount espelha seu código dentro do container (bom para dev).
+    # Só cuide para não montar por cima de uma venv criada dentro de /app.
+    volumes:
+      - ./backend:/app
+    env_file:
+      - ./backend/.env
+    environment:
+      # Passe os hosts/ports que sua API usa para conectar nos serviços
+      - MONGO_URI=mongodb://admin:password@mongo:27017
+      - CHROMA_HOST=http://chroma:8001
+    depends_on:
+      - mongo
+      - chroma
+      # Se quiser condicionar por healthcheck (quando configurar healthchecks):
+      # mongo:
+      #   condition: service_healthy
+      # chroma:
+      #   condition: service_healthy
+    networks:
+      - app-network
+    restart: unless-stopped
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  mongo_data:
+  chroma_data:
