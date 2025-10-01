@@ -1,59 +1,92 @@
-# GoFomentos
+# Welcome to your Lovable project
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.3.2.
+## Project info
 
-## Development server
+**URL**: https://lovable.dev/projects/3181909b-691e-4b51-8b71-28b8e2ae9a61
 
-To start a local development server, run:
+## How can I edit this code?
 
-```bash
-ng serve
+There are several ways of editing your application.
+
+**Use Lovable**
+
+Simply visit the [Lovable Project](https://lovable.dev/projects/3181909b-691e-4b51-8b71-28b8e2ae9a61) and start prompting.
+
+Changes made via Lovable will be committed automatically to this repo.
+
+**Use your preferred IDE**
+
+If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+
+The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+
+Follow these steps:
+
+```sh
+# Step 1: Clone the repository using the project's Git URL.
+git clone <YOUR_GIT_URL>
+
+# Step 2: Navigate to the project directory.
+cd <YOUR_PROJECT_NAME>
+
+# Step 3: Install the necessary dependencies.
+npm i
+
+# Step 4: Start the development server with auto-reloading and an instant preview.
+npm run dev
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+**Edit a file directly in GitHub**
 
-## Code scaffolding
+- Navigate to the desired file(s).
+- Click the "Edit" button (pencil icon) at the top right of the file view.
+- Make your changes and commit the changes.
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+**Use GitHub Codespaces**
 
-```bash
-ng generate component component-name
+- Navigate to the main page of your repository.
+- Click on the "Code" button (green button) near the top right.
+- Select the "Codespaces" tab.
+- Click on "New codespace" to launch a new Codespace environment.
+- Edit files directly within the Codespace and commit and push your changes once you're done.
+
+## What technologies are used for this project?
+
+This project is built with:
+
+- Vite
+- TypeScript
+- React
+- shadcn-ui
+- Tailwind CSS
+
+## Convenções de Nomenclatura
+
+Este projeto segue convenções de nomenclatura em português para maior clareza e consistência. Para mais detalhes, consulte o arquivo [CONVENÇÕES_NOMENCLATURA.md](./CONVENÇÕES_NOMENCLATURA.md).
+
+### Principais Convenções
+
+- **Componentes**: PascalCase em português (ex: `CardEdital`, `SecaoFiltro`)
+- **Hooks**: Prefixo "usar" + camelCase (ex: `usarEditais`, `usarContexto`)
+- **Serviços**: Prefixo do tipo + nome (ex: `apiEdital`, `servicoAutenticacao`)
+- **Métodos**: camelCase com verbo + substantivo (ex: `buscarEditais`, `atualizarFiltros`)
+
+### Script de Refatoração
+
+Para ajudar na migração para as novas convenções, um script está disponível:
+
+```sh
+node scripts/refatorar-nomenclatura.js
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+## How can I deploy this project?
 
-```bash
-ng generate --help
-```
+Simply open [Lovable](https://lovable.dev/projects/3181909b-691e-4b51-8b71-28b8e2ae9a61) and click on Share -> Publish.
 
-## Building
+## Can I connect a custom domain to my Lovable project?
 
-To build the project run:
+Yes, you can!
 
-```bash
-ng build
-```
+To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
