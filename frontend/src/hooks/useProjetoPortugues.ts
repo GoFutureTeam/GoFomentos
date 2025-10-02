@@ -47,7 +47,7 @@ export const useProjetoPortugues = () => {
       // Mostrar notificação de sucesso
       toast({
         title: variaveis.id ? 'Projeto atualizado com sucesso!' : 'Projeto salvo com sucesso!',
-        description: `O projeto "${variaveis.nomeProjeto}" foi ${variaveis.id ? 'atualizado' : 'salvo'} com sucesso.`
+        description: `O projeto "${variaveis.titulo_projeto}" foi ${variaveis.id ? 'atualizado' : 'salvo'} com sucesso.`
       });
     },
     onError: (erro) => {

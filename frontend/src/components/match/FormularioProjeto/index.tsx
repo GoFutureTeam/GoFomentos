@@ -7,7 +7,9 @@ import { ProjetoProps } from './types';
 import { useProjetoPortugues } from '@/hooks/useProjetoPortugues';
 import { useAutenticacaoPortugues } from '@/hooks/useAutenticacaoPortugues';
 import { Button } from '@/components/ui/button';
-import { FileUpload } from '../FileUpload';
+import { DadosProjeto } from '@/services/apiProjeto';
+// REMOVIDO: Upload de documento não será usado na primeira versão
+// import { FileUpload } from '../FileUpload';
 
 const projectFormSchema = z.object({
   projectTitle: z.string().min(1, 'Título do projeto é obrigatório'),
@@ -20,10 +22,11 @@ const projectFormSchema = z.object({
 type ProjectFormData = z.infer<typeof projectFormSchema>;
 
 export const ProjectForm: React.FC<ProjetoProps> = ({ projetoInicial }) => {
-  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  // REMOVIDO: Upload de documento não será usado na primeira versão
+  // const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [projetoSalvo, setProjetoSalvo] = useState(false);
   const navigate = useNavigate();
-  const { autenticado } = useAutenticacaoPortugues();
+  const { autenticado, usuario } = useAutenticacaoPortugues();
   const { salvarProjeto, salvando } = useProjetoPortugues();
   
   const {
@@ -35,11 +38,11 @@ export const ProjectForm: React.FC<ProjetoProps> = ({ projetoInicial }) => {
   } = useForm<ProjectFormData>({
     resolver: zodResolver(projectFormSchema),
     defaultValues: {
-      projectTitle: projetoInicial?.nomeProjeto || '',
-      projectObjective: projetoInicial?.objetivoPrincipal || '',
-      companyName: '',
-      companyActivities: projetoInicial?.descricao || '',
-      cnae: ''
+      projectTitle: projetoInicial?.titulo_projeto || '',
+      projectObjective: projetoInicial?.objetivo_principal || '',
+      companyName: projetoInicial?.nome_empresa || '',
+      companyActivities: projetoInicial?.resumo_atividades || '',
+      cnae: projetoInicial?.cnae || ''
     }
   });
   
@@ -47,30 +50,34 @@ export const ProjectForm: React.FC<ProjetoProps> = ({ projetoInicial }) => {
   useEffect(() => {
     if (projetoInicial) {
       reset({
-        projectTitle: projetoInicial.nomeProjeto,
-        projectObjective: projetoInicial.objetivoPrincipal || '',
-        companyName: '',
-        companyActivities: projetoInicial.descricao,
-        cnae: ''
+        projectTitle: projetoInicial.titulo_projeto,
+        projectObjective: projetoInicial.objetivo_principal,
+        companyName: projetoInicial.nome_empresa,
+        companyActivities: projetoInicial.resumo_atividades,
+        cnae: projetoInicial.cnae
       });
       setProjetoSalvo(false);
     }
   }, [projetoInicial, reset]);
   
+  // Função para mapear dados do formulário para o formato do backend
+  const mapFormToBackend = (formData: ProjectFormData): DadosProjeto => {
+    return {
+      ...(projetoInicial?.id ? { id: projetoInicial.id } : {}),
+      titulo_projeto: formData.projectTitle,
+      objetivo_principal: formData.projectObjective,
+      nome_empresa: formData.companyName || '',
+      resumo_atividades: formData.companyActivities,
+      cnae: formData.cnae,
+      user_id: usuario?.id || ''
+    };
+  };
+  
   const handleSaveProjeto = () => {
     const formData = getValues();
-    const projetoData = {
-      ...(projetoInicial || {}),
-      nomeProjeto: formData.projectTitle,
-      descricao: formData.companyActivities,
-      objetivoPrincipal: formData.projectObjective,
-      areaProjeto: projetoInicial?.areaProjeto || 'Geral',
-      dataCriacao: projetoInicial?.dataCriacao || new Date().toISOString(),
-      dataAtualizacao: new Date().toISOString()
-    };
+    const projetoData = mapFormToBackend(formData);
     salvarProjeto(projetoData);
     setProjetoSalvo(true);
-    // Usuário permanece no formulário para analisar compatibilidade
   };
   
   const onSubmit = async (data: ProjectFormData) => {
@@ -197,6 +204,7 @@ export const ProjectForm: React.FC<ProjetoProps> = ({ projetoInicial }) => {
                 )}
               </div>
           
+              {/* REMOVIDO: Upload de documento não será usado na primeira versão
               <div className="mt-[24px] max-md:mt-5">
                 <h4 className="text-[rgba(67,80,88,1)] text-2xl font-bold ml-6 max-md:ml-2.5">
                   Envio de documentos
@@ -206,6 +214,7 @@ export const ProjectForm: React.FC<ProjetoProps> = ({ projetoInicial }) => {
                 </p>
                 <FileUpload onFileSelect={setUploadedFile} />
               </div>
+              */}
 
               <p className="text-[rgba(67,80,88,1)] text-lg font-semibold ml-6 mt-6 max-md:ml-2.5">
                 Os campos com <span className="font-extrabold text-red-500">*</span> na descrição são obrigatórios
