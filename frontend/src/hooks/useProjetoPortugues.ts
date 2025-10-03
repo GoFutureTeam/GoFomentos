@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { apiProjeto, DadosProjeto } from '../services/apiProjeto';
 import { useToast } from './use-toast';
 
@@ -11,6 +12,7 @@ import { useToast } from './use-toast';
 export const useProjetoPortugues = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const navigate = useNavigate();
   
   // Consulta para listar projetos
   const { 
@@ -22,6 +24,15 @@ export const useProjetoPortugues = () => {
     queryFn: async () => {
       const resposta = await apiProjeto.listarProjetos();
       if (!resposta.sucesso) {
+        // Se a sessão expirou, redireciona para login
+        if (resposta.mensagem.includes('Sessão expirada') || resposta.mensagem.includes('login')) {
+          toast({
+            title: 'Sessão expirada',
+            description: 'Por favor, faça login novamente.',
+            variant: 'destructive'
+          });
+          navigate('/login');
+        }
         throw new Error(resposta.mensagem);
       }
       return resposta.dados;
@@ -36,6 +47,15 @@ export const useProjetoPortugues = () => {
     mutationFn: async (dados: DadosProjeto) => {
       const resposta = await apiProjeto.salvarProjeto(dados);
       if (!resposta.sucesso) {
+        // Se a sessão expirou, redireciona para login
+        if (resposta.mensagem.includes('Sessão expirada') || resposta.mensagem.includes('login')) {
+          toast({
+            title: 'Sessão expirada',
+            description: 'Por favor, faça login novamente.',
+            variant: 'destructive'
+          });
+          navigate('/login');
+        }
         throw new Error(resposta.mensagem);
       }
       return resposta.dados;

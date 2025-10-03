@@ -34,7 +34,7 @@ export const MatchedEditalCard: React.FC<MatchedEditalCardProps> = ({
       {/* Header Image */}
       <div className="w-full h-[23px] bg-[#DCF763] rounded-t-[39px] -mx-0"></div>
       
-      <div className="flex w-full flex-col items-stretch mt-[45px] px-[65px] max-md:mt-10 max-md:px-5">
+      <div className="flex w-full flex-col items-stretch mt-[25px] sm:mt-[45px] px-5 sm:px-8 md:px-[65px]">
         {/* Header with title and compatibility badge */}
         <div className="flex items-start justify-between gap-4 mb-4">
           <div className="flex-1">
@@ -52,14 +52,14 @@ export const MatchedEditalCard: React.FC<MatchedEditalCardProps> = ({
         <hr className="border-gray-300 my-6" />
         
         {/* Content section */}
-        <div className="flex gap-8 items-start">
+        <div className="flex flex-col sm:flex-row gap-8 items-start">
           <div className="flex-1">
             <p className="text-gray-700 text-base mb-6 leading-relaxed">
               {description}
             </p>
             
             {/* Dates */}
-            <div className="flex gap-8 text-sm text-gray-600">
+            <div className="flex flex-wrap gap-4 sm:gap-8 text-sm text-gray-600">
               <div>
                 <span className="font-medium">Abertura:</span> {formatDate(openingDate)}
               </div>
@@ -70,6 +70,7 @@ export const MatchedEditalCard: React.FC<MatchedEditalCardProps> = ({
           </div>
           
           {/* Details button */}
+          <div className="mt-4 sm:mt-0">
           {externalLink ? <a href={externalLink} target="_blank" rel="noopener noreferrer" className="bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold px-8 py-3 rounded-2xl transition-colors whitespace-nowrap">
               Mais detalhes
             </a> : <Link 
@@ -79,6 +80,7 @@ export const MatchedEditalCard: React.FC<MatchedEditalCardProps> = ({
             >
               Ver detalhes
             </Link>}
+          </div>
         </div>
       </div>
     </article>;

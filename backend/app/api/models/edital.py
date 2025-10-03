@@ -108,7 +108,7 @@ class Edital(EditalBase):
     updated_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class EditalChunk(BaseModel):

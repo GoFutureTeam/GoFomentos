@@ -2,6 +2,7 @@ import React from 'react';
 import CommonHeader from '../components/CommonHeader';
 import { EmailSignup as EmailSignupForm } from '../components/match/EmailSignup';
 import Footer from '../components/details/Footer';
+import { uploads } from '../assets/uploads';
 
 const EmailSignup = () => {
   return (
@@ -12,12 +13,7 @@ const EmailSignup = () => {
         showSecondSection={false}
       />
       
-      <div style={{
-        backgroundImage: 'url(/lovable-uploads/8a170130-d07b-497a-9e68-ec6bb3ce56bb.png)',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat'
-      }} className="relative bg-[rgba(220,247,99,0.65)] z-10 flex w-full flex-col items-center py-12 sm:py-16 px-5 lg:px-20 lg:py-[20px]" />
+
       
       <main>
         <EmailSignupForm />

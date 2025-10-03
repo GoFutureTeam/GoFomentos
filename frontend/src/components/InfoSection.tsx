@@ -8,7 +8,7 @@ const InfoSection = () => {
         alt="Background"
         className="absolute h-full w-full object-cover inset-0"
       />
-      <div className="relative bg-[rgba(220,247,99,0.65)] z-10 flex w-full flex-col items-center py-12 sm:py-16 lg:py-20 px-5 lg:px-[70px]">
+      <div className="relative bg-white z-10 flex w-full flex-col items-center py-12 sm:py-16 lg:py-20 px-5 lg:px-[70px]">
         <div className="flex w-full max-w-[1279px] items-stretch gap-8 lg:gap-[100px] flex-col lg:flex-row text-center lg:text-left">
           <h2 className="text-2xl sm:text-3xl lg:text-[32px] font-extrabold lg:w-[273px] lg:shrink-0 text-[#435058]">
             Você sabe porque se inscrever em Editais?

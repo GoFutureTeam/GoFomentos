@@ -96,9 +96,9 @@ export const ProjectForm: React.FC<ProjetoProps> = ({ projetoInicial }) => {
         </p>
       </header>
 
-      <div className="flex flex-col relative min-h-[1400px] w-full items-center mt-[60px] pb-[59px] px-20 max-md:max-w-full max-md:mt-10 max-md:px-5">
-        <div className="relative z-10 mt-[-50px] w-[900px] max-w-full">
-          <form onSubmit={handleSubmit(onSubmit)} className="bg-white shadow-[0px_4px_6px_2px_rgba(0,0,0,0.25)] text-xl pb-[32px] rounded-[39px] max-md:max-w-full overflow-hidden">
+      <div className="flex flex-col relative min-h-[1200px] w-full items-center mt-[30px] pb-[30px] px-20 max-md:max-w-full max-md:mt-10 max-md:px-5">
+        <div className="relative z-20 w-[900px] max-w-full">
+          <form onSubmit={handleSubmit(onSubmit)} className="bg-white shadow-[0px_4px_6px_2px_rgba(0,0,0,0.25)] text-xl pb-[20px] rounded-[39px] max-md:max-w-full overflow-hidden">
             <div className="w-full h-[23px] bg-[#DCF763] rounded-t-[39px] -mx-0"></div>
             
             <div className="flex flex-col mt-6 px-[40px] max-md:max-w-full max-md:mt-5 max-md:px-5">

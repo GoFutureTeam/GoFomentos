@@ -9,22 +9,22 @@ import { useToast } from '@/hooks/use-toast';
 import { authApi } from '@/services/apiAuth';
 
 // Esquema de validação para o formulário
-const esquemaEsqueciSenha = z.object({
+const esquemaRecuperarSenha = z.object({
   email: z.string().email('Email inválido')
 });
 
-type DadosEsqueciSenha = z.infer<typeof esquemaEsqueciSenha>;
+type DadosRecuperarSenha = z.infer<typeof esquemaRecuperarSenha>;
 
-const EsqueciSenha: React.FC = () => {
+const RecuperarSenha: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [enviado, setEnviado] = useState(false);
   
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<DadosEsqueciSenha>({
-    resolver: zodResolver(esquemaEsqueciSenha)
+  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<DadosRecuperarSenha>({
+    resolver: zodResolver(esquemaRecuperarSenha)
   });
   
-  const aoEnviar = async (dados: DadosEsqueciSenha) => {
+  const aoEnviar = async (dados: DadosRecuperarSenha) => {
     try {
       // Implementar chamada real à API quando disponível
       await authApi.requestPasswordReset({
@@ -54,7 +54,7 @@ const EsqueciSenha: React.FC = () => {
         
         <div className="p-8">
           <div className="flex flex-col items-center mb-6">
-            <h2 className="text-[rgba(67,80,88,1)] text-2xl font-extrabold">Esqueci minha senha</h2>
+            <h2 className="text-[rgba(67,80,88,1)] text-2xl font-extrabold">Recuperar Senha</h2>
             <p className="text-[rgba(67,80,88,0.7)] text-sm font-medium mt-2 text-center">
               {enviado 
                 ? 'Email enviado! Verifique sua caixa de entrada.'
@@ -117,4 +117,4 @@ const EsqueciSenha: React.FC = () => {
   );
 };
 
-export default EsqueciSenha;
+export default RecuperarSenha;

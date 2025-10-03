@@ -1,4 +1,5 @@
 import React from 'react';
+import { uploads } from '../../assets/uploads';
 const Footer = () => {
   const handleEmailClick = () => {
     window.location.href = 'mailto:contatogofuture@gmail.com';
@@ -7,7 +8,7 @@ const Footer = () => {
       <img src="https://cdn.builder.io/api/v1/image/assets/f302f4804c934a9ca3c4b476c31d8232/ad372249cc6b66a82a42a2df50cde3994761ac19?placeholderIfAbsent=true" alt="Background" className="absolute inset-0 w-full h-full object-cover" />
       
       <div style={{
-      backgroundImage: 'url(/lovable-uploads/b4c4ad04-bb19-4771-8f0c-712bf67d01f5.png)',
+      backgroundImage: `url(${uploads['b4c4ad04-bb19-4771-8f0c-712bf67d01f5.png']})`,
       backgroundSize: 'cover',
       backgroundPosition: 'center',
       backgroundRepeat: 'no-repeat'
@@ -22,12 +23,12 @@ const Footer = () => {
             </h2>
           </div>
           
-          <button onClick={handleEmailClick} className="bg-white text-black text-base font-medium px-6 py-3 rounded-[25px] flex-shrink-0 hover:bg-gray-50 transition-colors">
+          <button onClick={handleEmailClick} className="bg-[#DCF763] text-black text-base font-medium px-6 py-3 rounded-[25px] flex-shrink-0 hover:bg-[#DCF763]/90 transition-colors">
             E-mail: contatogofuture@gmail.com
           </button>
         </div>
         
-        <div className="bg-[rgba(67,80,88,1)] py-4 px-[70px] text-center">
+        <div className="bg-[rgba(67,80,88,1)] py-4 px-5 sm:px-10 md:px-[70px] text-center">
           <p className="text-[rgba(248,248,248,1)] text-sm font-medium">
             Copyright © 2025 Powered by GoFuture - Todos os direitos reservados.
           </p>

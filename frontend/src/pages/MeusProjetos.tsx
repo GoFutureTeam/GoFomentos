@@ -5,6 +5,8 @@ import { useProjetoPortugues } from '@/hooks/useProjetoPortugues';
 import CommonHeader from '@/components/CommonHeader';
 import Footer from '@/components/details/Footer';
 import { Trash2 } from 'lucide-react';
+// Importando a imagem diretamente
+import backgroundImage from '@/assets/uploads/8a170130-d07b-497a-9e68-ec6bb3ce56bb.png';
 
 const MeusProjetos: React.FC = () => {
   const { projetos, carregando, excluirProjeto } = useProjetoPortugues();
@@ -18,8 +20,8 @@ const MeusProjetos: React.FC = () => {
     navigate('/matchs');
   };
   
-  const confirmarExclusao = (projetoId: string, nomeProjeto: string) => {
-    if (window.confirm(`Tem certeza que deseja excluir o projeto "${nomeProjeto}"?`)) {
+  const confirmarExclusao = (projetoId: string, tituloProjeto: string) => {
+    if (window.confirm(`Tem certeza que deseja excluir o projeto "${tituloProjeto}"?`)) {
       excluirProjeto(projetoId);
     }
   };
@@ -32,27 +34,17 @@ const MeusProjetos: React.FC = () => {
         showSecondSection={false} 
       />
       
-      <div 
-        style={{
-          backgroundImage: 'url(/lovable-uploads/8a170130-d07b-497a-9e68-ec6bb3ce56bb.png)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat'
-        }} 
-        className="relative bg-[rgba(220,247,99,0.65)] z-10 flex w-full flex-col items-center py-12 sm:py-16 px-5 lg:px-20 lg:py-[20px]" 
-      />
-      
-      <main className="bg-white flex flex-col items-stretch max-md:max-w-full relative pb-[80px]">
-        <header className="text-center pt-[40px]">
-          <h2 className="text-[rgba(67,80,88,1)] text-4xl font-extrabold">
-            Meus Projetos
-          </h2>
-          <p className="text-black text-2xl font-medium leading-[30px] mt-3.5 max-md:max-w-full">
-            Gerencie seus projetos e faça match com editais disponíveis
-          </p>
-        </header>
+      <div className="bg-white flex flex-col items-stretch max-md:max-w-full relative pb-[40px] pt-6">
+          <header className="text-center pt-[20px]">
+            <h2 className="text-[rgba(67,80,88,1)] text-4xl font-extrabold">
+              Meus Projetos
+            </h2>
+            <p className="text-black text-2xl font-medium leading-[30px] mt-3.5 max-md:max-w-full">
+              Gerencie seus projetos e faça match com editais disponíveis
+            </p>
+          </header>
 
-        <div className="flex flex-col relative w-full items-center mt-[40px] px-20 max-md:max-w-full max-md:px-5">
+        <div className="flex flex-col relative w-full items-center mt-[20px] px-20 max-md:max-w-full max-md:px-5">
           <div className="relative z-10 w-[900px] max-w-full">
             <div className="flex justify-between items-center mb-8">
               <h3 className="text-[rgba(67,80,88,1)] text-3xl font-extrabold">
@@ -92,18 +84,18 @@ const MeusProjetos: React.FC = () => {
                     <div className="w-full h-[23px] bg-[#DCF763]"></div>
                     <div className="p-6">
                       <h4 className="font-bold text-2xl text-[rgba(67,80,88,1)] mb-3">
-                        {projeto.nomeProjeto}
+                        {projeto.titulo_projeto}
                       </h4>
                       <p className="text-base text-[rgba(67,80,88,1)] mb-4 line-clamp-3">
-                        {projeto.descricao}
+                        {projeto.resumo_atividades}
                       </p>
                       <div className="flex items-center justify-between gap-2 flex-wrap mt-6">
                         <span className="text-sm text-[rgba(67,80,88,1)] font-medium">
-                          {projeto.areaProjeto || 'Geral'}
+                          {projeto.nome_empresa}
                         </span>
                         <div className="flex gap-3 items-center">
                           <button
-                            onClick={() => confirmarExclusao(projeto.id!, projeto.nomeProjeto)}
+                            onClick={() => confirmarExclusao(projeto.id!, projeto.titulo_projeto)}
                             className="group relative bg-red-500 text-white p-2.5 rounded-full hover:bg-red-600 transition-colors"
                             title="Excluir"
                           >
@@ -127,7 +119,7 @@ const MeusProjetos: React.FC = () => {
             )}
           </div>
         </div>
-      </main>
+      </div>
       
       <Footer />
     </div>

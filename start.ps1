@@ -17,8 +17,8 @@ docker-compose up -d
 $services = docker-compose ps
 if ($services -match "Up") {
     Write-Host "Serviços iniciados com sucesso!" -ForegroundColor Green
-    Write-Host "API disponível em: http://localhost:8000" -ForegroundColor Cyan
-    Write-Host "Documentação da API: http://localhost:8000/docs" -ForegroundColor Cyan
+    Write-Host "API disponível em: http://localhost:8002" -ForegroundColor Cyan
+    Write-Host "Documentação da API: http://localhost:8002/docs" -ForegroundColor Cyan
     Write-Host "MongoDB disponível em: localhost:27017" -ForegroundColor Cyan
     Write-Host "ChromaDB disponível em: http://localhost:8001" -ForegroundColor Cyan
 } else {

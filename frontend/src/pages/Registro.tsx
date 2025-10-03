@@ -3,8 +3,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { useAutenticacaoPortugues } from '@/hooks/useAutenticacaoPortugues';
 import { useToast } from '@/hooks/use-toast';
 import { authApi } from '@/services/apiAuth';
@@ -75,119 +75,153 @@ const Registro: React.FC = () => {
   };
   
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-8">
-      <Card className="w-full max-w-md shadow-lg">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">Criar conta</CardTitle>
-          <CardDescription className="text-center">
-            Preencha os dados abaixo para se cadastrar
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit(aoEnviar)} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+    <div className="flex items-center justify-center min-h-screen bg-[rgba(217,217,217,0.15)] p-4">
+      <div className="w-full max-w-lg bg-[rgba(217,217,217,0.15)] shadow-[0px_4px_6px_2px_rgba(0,0,0,0.25)] rounded-[39px] overflow-hidden">
+        {/* Barra superior verde */}
+        <div className="bg-[#DCF763] h-[15px] w-full"></div>
+        
+        <div className="p-8">
+          <div className="flex flex-col items-center mb-6">
+            <h2 className="text-[rgba(67,80,88,1)] text-2xl font-extrabold">Criar conta</h2>
+            <p className="text-[rgba(67,80,88,0.7)] text-sm font-medium mt-2 text-center">
+              Preencha os dados abaixo para se cadastrar
+            </p>
+          </div>
+          
+          <form onSubmit={handleSubmit(aoEnviar)} className="space-y-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label htmlFor="nome" className="text-sm font-medium">Nome</label>
-                <input
+                <label htmlFor="nome" className="text-[rgba(67,80,88,1)] text-sm font-extrabold">
+                  Nome
+                </label>
+                <Input
                   id="nome"
                   type="text"
                   {...register('nome')}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#DCF763]"
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#DCF763] ${
+                    errors.nome ? 'border-red-500' : 'border-gray-300'
+                  }`}
                   placeholder="João"
                 />
                 {errors.nome && (
-                  <p className="text-red-500 text-sm">{errors.nome.message}</p>
+                  <p className="text-red-500 text-xs">{errors.nome.message}</p>
                 )}
               </div>
               
               <div className="space-y-2">
-                <label htmlFor="sobrenome" className="text-sm font-medium">Sobrenome</label>
-                <input
+                <label htmlFor="sobrenome" className="text-[rgba(67,80,88,1)] text-sm font-extrabold">
+                  Sobrenome
+                </label>
+                <Input
                   id="sobrenome"
                   type="text"
                   {...register('sobrenome')}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#DCF763]"
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#DCF763] ${
+                    errors.sobrenome ? 'border-red-500' : 'border-gray-300'
+                  }`}
                   placeholder="Silva"
                 />
                 {errors.sobrenome && (
-                  <p className="text-red-500 text-sm">{errors.sobrenome.message}</p>
+                  <p className="text-red-500 text-xs">{errors.sobrenome.message}</p>
                 )}
               </div>
             </div>
             
             <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium">Email</label>
-              <input
+              <label htmlFor="email" className="text-[rgba(67,80,88,1)] text-sm font-extrabold">
+                Email
+              </label>
+              <Input
                 id="email"
                 type="email"
                 {...register('email')}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#DCF763]"
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#DCF763] ${
+                  errors.email ? 'border-red-500' : 'border-gray-300'
+                }`}
                 placeholder="seu@email.com"
               />
               {errors.email && (
-                <p className="text-red-500 text-sm">{errors.email.message}</p>
+                <p className="text-red-500 text-xs">{errors.email.message}</p>
               )}
             </div>
             
             <div className="space-y-2">
-              <label htmlFor="confirmarEmail" className="text-sm font-medium">Confirmar Email</label>
-              <input
+              <label htmlFor="confirmarEmail" className="text-[rgba(67,80,88,1)] text-sm font-extrabold">
+                Confirmar Email
+              </label>
+              <Input
                 id="confirmarEmail"
                 type="email"
                 {...register('confirmarEmail')}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#DCF763]"
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#DCF763] ${
+                  errors.confirmarEmail ? 'border-red-500' : 'border-gray-300'
+                }`}
                 placeholder="seu@email.com"
               />
               {errors.confirmarEmail && (
-                <p className="text-red-500 text-sm">{errors.confirmarEmail.message}</p>
+                <p className="text-red-500 text-xs">{errors.confirmarEmail.message}</p>
               )}
             </div>
             
             <div className="space-y-2">
-              <label htmlFor="senha" className="text-sm font-medium">Senha</label>
-              <input
+              <label htmlFor="senha" className="text-[rgba(67,80,88,1)] text-sm font-extrabold">
+                Senha
+              </label>
+              <Input
                 id="senha"
                 type="password"
                 {...register('senha')}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#DCF763]"
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#DCF763] ${
+                  errors.senha ? 'border-red-500' : 'border-gray-300'
+                }`}
                 placeholder="••••••"
               />
               {errors.senha && (
-                <p className="text-red-500 text-sm">{errors.senha.message}</p>
+                <p className="text-red-500 text-xs">{errors.senha.message}</p>
               )}
             </div>
             
             <div className="space-y-2">
-              <label htmlFor="confirmarSenha" className="text-sm font-medium">Confirmar Senha</label>
-              <input
+              <label htmlFor="confirmarSenha" className="text-[rgba(67,80,88,1)] text-sm font-extrabold">
+                Confirmar Senha
+              </label>
+              <Input
                 id="confirmarSenha"
                 type="password"
                 {...register('confirmarSenha')}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#DCF763]"
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#DCF763] ${
+                  errors.confirmarSenha ? 'border-red-500' : 'border-gray-300'
+                }`}
                 placeholder="••••••"
               />
               {errors.confirmarSenha && (
-                <p className="text-red-500 text-sm">{errors.confirmarSenha.message}</p>
+                <p className="text-red-500 text-xs">{errors.confirmarSenha.message}</p>
               )}
             </div>
             
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="w-full bg-[#DCF763] text-black hover:bg-[#DCF763]/90 font-semibold"
+              className="w-full bg-[#DCF763] text-[rgba(67,80,88,1)] hover:bg-[#DCF763]/90 font-extrabold py-3 mt-2"
             >
               {isSubmitting ? 'Cadastrando...' : 'Cadastrar'}
             </Button>
-            
-            <div className="text-center">
-              <span className="text-sm text-gray-600">Já tem uma conta? </span>
-              <a href="/login" className="text-sm text-gray-900 font-medium hover:underline">
-                Fazer login
-              </a>
-            </div>
           </form>
-        </CardContent>
-      </Card>
+          
+          <div className="mt-6 text-center">
+            <p className="text-sm text-[rgba(67,80,88,0.7)] font-medium">
+              Já tem uma conta?{' '}
+              <button
+                type="button"
+                onClick={() => navigate('/login')}
+                className="text-[rgba(67,80,88,1)] font-extrabold hover:underline"
+              >
+                Fazer login
+              </button>
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

@@ -2,7 +2,7 @@ import { Edital, EditalCreateData, EditalFilters, EditalEnums, ApiResponse, Edit
 import { fixEncoding } from '../lib/utils';
 
 // Configuração da API
-const URL_BASE_API = 'https://fomentos-homologacao-api.gofuture.cc/api/v1';
+const URL_BASE_API = 'http://localhost:8002/api';
 
 // Interface para resposta da API
 interface RespostaApiEditais {

@@ -9,6 +9,9 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import Header from "./Header";
+// Importando as imagens diretamente
+import backgroundImage1 from '@/assets/uploads/Pattern 1.2 (1).svg';
+import backgroundImage2 from '@/assets/uploads/8a170130-d07b-497a-9e68-ec6bb3ce56bb.png';
 interface CommonHeaderProps {
   title?: string;
   description?: string;
@@ -63,10 +66,9 @@ const CommonHeader: React.FC<CommonHeaderProps> = ({
       <section className="bg-[rgba(67,80,88,1)]">
         <div
           style={{
-            backgroundImage:
-              "url(/lovable-uploads/fc8e9f15-312d-4438-9834-cd7b3554cb1d.png)",
-            backgroundSize: "auto 100%",
-            backgroundPosition: "right center",
+            backgroundImage: `url(${backgroundImage1})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
             backgroundRepeat: "no-repeat",
           }}
           className="px-5 py-12 lg:py-16 relative"
@@ -123,15 +125,15 @@ const CommonHeader: React.FC<CommonHeaderProps> = ({
           <div
             style={{
               backgroundImage:
-                "url(/lovable-uploads/8a170130-d07b-497a-9e68-ec6bb3ce56bb.png)",
+                `url(${backgroundImage2})`,
               backgroundSize: "cover",
               backgroundPosition: "center",
               backgroundRepeat: "no-repeat",
             }}
-            className="relative bg-[rgba(220,247,99,0.65)] z-10 flex w-full flex-col items-center py-12 sm:py-16 px-5 lg:py-[20px]"
+            className="relative bg-white z-10 flex w-full flex-col items-center py-12 sm:py-16 px-5 lg:py-[20px]"
           >
-            <div className="flex w-full max-w-[1279px] flex-row justify-between items-start gap-8 px-0 lg:px-5">
-              <h2 className="font-archivo font-extrabold text-2xl sm:text-3xl lg:w-[273px] lg:shrink-0 text-[rgba(67,80,88,1)] mx-0 my-0 text-left px-0 lg:text-3xl py-[6px]">
+            <div className="flex w-full max-w-[1279px] flex-col md:flex-row justify-between items-start gap-4 md:gap-8 px-0 lg:px-5">
+              <h2 className="font-archivo font-extrabold text-2xl sm:text-3xl lg:w-[273px] lg:shrink-0 text-[rgba(67,80,88,1)] mx-0 my-0 text-center md:text-left px-0 lg:text-3xl py-[6px]">
                 Você sabe porque se inscrever em Editais?
               </h2>
               <p className="font-archivo font-medium text-lg sm:text-xl leading-6 sm:leading-[30px] max-w-[550px] text-[rgba(67,80,88,1)] py-[6px]">

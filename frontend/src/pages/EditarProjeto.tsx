@@ -12,15 +12,18 @@ import CommonHeader from '@/components/CommonHeader';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 
+import { DadosProjeto } from '@/services/apiProjeto';
+
 // Esquema de validação para o formulário
 const esquemaProjeto = z.object({
-  nomeProjeto: z.string().min(3, 'O nome do projeto deve ter pelo menos 3 caracteres'),
-  descricao: z.string().min(10, 'A descrição deve ter pelo menos 10 caracteres'),
-  objetivoPrincipal: z.string().min(10, 'O objetivo deve ter pelo menos 10 caracteres'),
-  areaProjeto: z.string().min(2, 'A área do projeto deve ser informada')
+  titulo_projeto: z.string().min(3, 'O título do projeto deve ter pelo menos 3 caracteres'),
+  objetivo_principal: z.string().min(10, 'O objetivo deve ter pelo menos 10 caracteres'),
+  nome_empresa: z.string().min(2, 'O nome da empresa deve ser informado'),
+  resumo_atividades: z.string().min(10, 'O resumo das atividades deve ter pelo menos 10 caracteres'),
+  cnae: z.string().min(1, 'O CNAE deve ser informado')
 });
 
-type DadosProjeto = z.infer<typeof esquemaProjeto>;
+type FormularioProjeto = z.infer<typeof esquemaProjeto>;
 
 const EditarProjeto: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -33,11 +36,8 @@ const EditarProjeto: React.FC = () => {
     handleSubmit,
     reset,
     formState: { errors, isSubmitting }
-  } = useForm<DadosProjeto>({
-    resolver: zodResolver(esquemaProjeto),
-    defaultValues: {
-      areaProjeto: 'Geral'
-    }
+  } = useForm<FormularioProjeto>({
+    resolver: zodResolver(esquemaProjeto)
   });
   
   // Encontrar o projeto atual pelo ID
@@ -47,23 +47,23 @@ const EditarProjeto: React.FC = () => {
   useEffect(() => {
     if (projetoAtual) {
       reset({
-        nomeProjeto: projetoAtual.nomeProjeto,
-        descricao: projetoAtual.descricao,
-        objetivoPrincipal: projetoAtual.objetivoPrincipal || '',
-        areaProjeto: projetoAtual.areaProjeto || 'Geral'
+        titulo_projeto: projetoAtual.titulo_projeto,
+        objetivo_principal: projetoAtual.objetivo_principal,
+        nome_empresa: projetoAtual.nome_empresa,
+        resumo_atividades: projetoAtual.resumo_atividades,
+        cnae: projetoAtual.cnae
       });
     }
   }, [projetoAtual, reset]);
   
-  const aoEnviar = async (dados: DadosProjeto) => {
+  const aoEnviar = async (dados: FormularioProjeto) => {
     if (!projetoAtual) return;
     
     try {
       // Manter os dados originais que não estão no formulário
-      const dadosAtualizados = {
+      const dadosAtualizados: DadosProjeto = {
         ...projetoAtual,
-        ...dados,
-        dataAtualizacao: new Date().toISOString()
+        ...dados
       };
       
       // Salvar o projeto atualizado
@@ -173,87 +173,94 @@ const EditarProjeto: React.FC = () => {
             
             <form onSubmit={handleSubmit(aoEnviar)}>
               <CardContent className="space-y-6">
-                {/* Nome do Projeto */}
+                {/* Título do Projeto */}
                 <div className="space-y-2">
-                  <label htmlFor="nomeProjeto" className="text-sm font-medium">
-                    Nome do Projeto <span className="text-red-500">*</span>
+                  <label htmlFor="titulo_projeto" className="text-sm font-medium">
+                    Título do Projeto <span className="text-red-500">*</span>
                   </label>
                   <Input
-                    id="nomeProjeto"
-                    placeholder="Digite o nome do seu projeto"
-                    {...register('nomeProjeto')}
-                    className={errors.nomeProjeto ? 'border-red-500' : ''}
+                    id="titulo_projeto"
+                    placeholder="Digite o título do seu projeto"
+                    {...register('titulo_projeto')}
+                    className={errors.titulo_projeto ? 'border-red-500' : ''}
                   />
-                  {errors.nomeProjeto && (
-                    <p className="text-sm text-red-500">{errors.nomeProjeto.message}</p>
+                  {errors.titulo_projeto && (
+                    <p className="text-sm text-red-500">{errors.titulo_projeto.message}</p>
                   )}
                 </div>
                 
                 {/* Objetivo Principal */}
                 <div className="space-y-2">
-                  <label htmlFor="objetivoPrincipal" className="text-sm font-medium">
+                  <label htmlFor="objetivo_principal" className="text-sm font-medium">
                     Objetivo Principal <span className="text-red-500">*</span>
                   </label>
                   <Textarea
-                    id="objetivoPrincipal"
+                    id="objetivo_principal"
                     placeholder="Descreva o objetivo principal do seu projeto"
-                    {...register('objetivoPrincipal')}
-                    className={`min-h-[100px] ${errors.objetivoPrincipal ? 'border-red-500' : ''}`}
+                    {...register('objetivo_principal')}
+                    className={`min-h-[100px] ${errors.objetivo_principal ? 'border-red-500' : ''}`}
                   />
-                  {errors.objetivoPrincipal && (
-                    <p className="text-sm text-red-500">{errors.objetivoPrincipal.message}</p>
+                  {errors.objetivo_principal && (
+                    <p className="text-sm text-red-500">{errors.objetivo_principal.message}</p>
                   )}
                 </div>
                 
-                {/* Descrição */}
+                {/* Nome da Empresa */}
                 <div className="space-y-2">
-                  <label htmlFor="descricao" className="text-sm font-medium">
-                    Descrição Detalhada <span className="text-red-500">*</span>
+                  <label htmlFor="nome_empresa" className="text-sm font-medium">
+                    Nome da Empresa <span className="text-red-500">*</span>
+                  </label>
+                  <Input
+                    id="nome_empresa"
+                    placeholder="Digite o nome da empresa"
+                    {...register('nome_empresa')}
+                    className={errors.nome_empresa ? 'border-red-500' : ''}
+                  />
+                  {errors.nome_empresa && (
+                    <p className="text-sm text-red-500">{errors.nome_empresa.message}</p>
+                  )}
+                </div>
+                
+                {/* Resumo das Atividades */}
+                <div className="space-y-2">
+                  <label htmlFor="resumo_atividades" className="text-sm font-medium">
+                    Resumo das Atividades da Empresa <span className="text-red-500">*</span>
                   </label>
                   <Textarea
-                    id="descricao"
-                    placeholder="Descreva detalhadamente o seu projeto"
-                    {...register('descricao')}
-                    className={`min-h-[150px] ${errors.descricao ? 'border-red-500' : ''}`}
+                    id="resumo_atividades"
+                    placeholder="Descreva as atividades da empresa"
+                    {...register('resumo_atividades')}
+                    className={`min-h-[150px] ${errors.resumo_atividades ? 'border-red-500' : ''}`}
                   />
-                  {errors.descricao && (
-                    <p className="text-sm text-red-500">{errors.descricao.message}</p>
+                  {errors.resumo_atividades && (
+                    <p className="text-sm text-red-500">{errors.resumo_atividades.message}</p>
                   )}
                 </div>
                 
-                {/* Área do Projeto */}
+                {/* CNAE */}
                 <div className="space-y-2">
-                  <label htmlFor="areaProjeto" className="text-sm font-medium">
-                    Área do Projeto <span className="text-red-500">*</span>
+                  <label htmlFor="cnae" className="text-sm font-medium">
+                    CNAE <span className="text-red-500">*</span>
                   </label>
-                  <select
-                    id="areaProjeto"
-                    {...register('areaProjeto')}
-                    className={`w-full p-2 border rounded-md ${errors.areaProjeto ? 'border-red-500' : 'border-gray-300'}`}
-                  >
-                    <option value="Geral">Geral</option>
-                    <option value="Educação">Educação</option>
-                    <option value="Saúde">Saúde</option>
-                    <option value="Meio Ambiente">Meio Ambiente</option>
-                    <option value="Tecnologia">Tecnologia</option>
-                    <option value="Cultura">Cultura</option>
-                    <option value="Esporte">Esporte</option>
-                    <option value="Assistência Social">Assistência Social</option>
-                    <option value="Outro">Outro</option>
-                  </select>
-                  {errors.areaProjeto && (
-                    <p className="text-sm text-red-500">{errors.areaProjeto.message}</p>
+                  <Input
+                    id="cnae"
+                    placeholder="Digite o código CNAE"
+                    {...register('cnae')}
+                    className={errors.cnae ? 'border-red-500' : ''}
+                  />
+                  {errors.cnae && (
+                    <p className="text-sm text-red-500">{errors.cnae.message}</p>
                   )}
                 </div>
                 
                 {/* Informações adicionais */}
                 <div className="bg-gray-50 p-4 rounded-md">
                   <p className="text-sm text-gray-500">
-                    <strong>Data de Criação:</strong> {projetoAtual.dataCriacao ? new Date(projetoAtual.dataCriacao).toLocaleDateString('pt-BR') : 'Não informada'}
+                    <strong>Data de Criação:</strong> {projetoAtual.created_at ? new Date(projetoAtual.created_at).toLocaleDateString('pt-BR') : 'Não informada'}
                   </p>
-                  {projetoAtual.dataAtualizacao && (
+                  {projetoAtual.updated_at && (
                     <p className="text-sm text-gray-500">
-                      <strong>Última Atualização:</strong> {new Date(projetoAtual.dataAtualizacao).toLocaleDateString('pt-BR')}
+                      <strong>Última Atualização:</strong> {new Date(projetoAtual.updated_at).toLocaleDateString('pt-BR')}
                     </p>
                   )}
                 </div>

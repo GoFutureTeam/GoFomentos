@@ -37,7 +37,7 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     ports:
-      - "8000:8000"
+      - "8002:8000"
     # ⚠️ Em Windows, esse bind mount espelha seu código dentro do container (bom para dev).
     # Só cuide para não montar por cima de uma venv criada dentro de /app.
     volumes:

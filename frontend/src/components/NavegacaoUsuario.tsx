@@ -1,6 +1,8 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAutenticacaoPortugues } from '@/hooks/useAutenticacaoPortugues';
+// Importando a imagem diretamente
+import logoImage from '@/assets/uploads/8a170130-d07b-497a-9e68-ec6bb3ce56bb.png';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -44,7 +46,7 @@ export const NavegacaoUsuario: React.FC = () => {
       <div className="flex items-center space-x-8">
         <Link to="/" className="flex items-center">
           <img 
-            src="/lovable-uploads/8a170130-d07b-497a-9e68-ec6bb3ce56bb.png" 
+            src={logoImage} 
             alt="GoFomentos Logo" 
             className="h-8 w-auto"
           />

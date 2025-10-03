@@ -1,4 +1,5 @@
 import React from 'react';
+import { uploads } from '../../assets/uploads';
 
 interface HeroSectionProps {
   title: string;
@@ -31,10 +32,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ title, description, editalNum
       <div 
         className="h-6 sm:h-8 lg:h-10" 
         style={{
-          backgroundImage: 'url(/lovable-uploads/8a170130-d07b-497a-9e68-ec6bb3ce56bb.png)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat'
+          backgroundColor: '#ffffff'
         }}
       />
     </section>

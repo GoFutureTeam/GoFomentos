@@ -6,6 +6,8 @@ import { ProjetosSalvos } from '../components/match/ProjetosSalvos';
 import { MonitoringSection } from '../components/match/MonitoringSection';
 import Footer from '../components/details/Footer';
 import { useProjetoPortugues } from '@/hooks/useProjetoPortugues';
+// Importando a imagem diretamente
+import backgroundImage from '@/assets/uploads/8a170130-d07b-497a-9e68-ec6bb3ce56bb.png';
 
 const Matchs = () => {
   // Obter o ID do projeto da URL, se existir
@@ -38,22 +40,12 @@ const Matchs = () => {
         showSecondSection={false} 
       />
       
-      <div 
-        style={{
-          backgroundImage: 'url(/lovable-uploads/8a170130-d07b-497a-9e68-ec6bb3ce56bb.png)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat'
-        }} 
-        className="relative bg-[rgba(220,247,99,0.65)] z-10 flex w-full flex-col items-center py-12 sm:py-16 px-5 lg:px-20 lg:py-[20px]" 
-      />
-      
-      <main>
+      <div className="container mx-auto pt-6">
         <ProjetosSalvos />
         <div id="formulario-match">
           <ProjectForm projetoInicial={projetoSelecionado} />
         </div>
-      </main>
+      </div>
       
       <Footer />
     </div>
