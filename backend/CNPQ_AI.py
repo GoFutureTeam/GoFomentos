@@ -45,13 +45,13 @@ if not OPENAI_API_KEY:
 # Inicializar cliente OpenAI
 if OPENAI_API_KEY:
     client = OpenAI(api_key=OPENAI_API_KEY)
-    print("✅ Cliente OpenAI inicializado com sucesso")
+    print("[OK] Cliente OpenAI inicializado com sucesso")
 else:
-    print("❌ ERRO: OPENAI_API_KEY não encontrada. Configure a variável de ambiente ou o arquivo .env")
+    print("[ERRO] OPENAI_API_KEY não encontrada. Configure a variável de ambiente ou o arquivo .env")
     exit(1)
 
 # Configuração do ChromaDB (opcional)
-USE_CHROMA = False  # Padrão: desativado (pode ser ativado via linha de comando)
+USE_CHROMA = True  # Padrão: ativado
 chroma_client = None
 collection = None
 
@@ -81,20 +81,17 @@ if USE_CHROMA:
                 
                 # Testar conexão
                 collections = chroma_client.list_collections()
-                print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ✅ Conexão com ChromaDB estabelecida. Collections disponíveis: {len(collections)}")
-                
-                # Configurar embedding function
-                embedding_fn = embedding_functions.OpenAIEmbeddingFunction(
-                    api_key=OPENAI_API_KEY,
-                    model_name="text-embedding-3-small"
-                )
-                
-                # Criar ou obter coleção
-                collection = chroma_client.get_or_create_collection(
-                    name="editais_cnpq",
-                    embedding_function=embedding_fn
-                )
-                print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ✅ Coleção 'editais_cnpq' pronta para uso.")
+                print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] [OK] Conexão com ChromaDB estabelecida. Collections disponíveis: {len(collections)}")
+
+                # Criar ou obter coleção (versão simplificada)
+                try:
+                    collection = chroma_client.get_or_create_collection(name="editais_cnpq")
+                except Exception as col_err:
+                    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Erro ao criar coleção: {col_err}")
+                    # Tentar sem parâmetros extras
+                    collection = chroma_client.create_collection(name="editais_cnpq")
+
+                print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] [OK] Coleção 'editais_cnpq' pronta para uso.")
                 break
             except Exception as retry_e:
                 print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Tentativa {attempt} falhou: {retry_e}")
@@ -105,7 +102,7 @@ if USE_CHROMA:
                 else:
                     raise
     except Exception as e:
-        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ❌ ERRO ao conectar com ChromaDB após {max_retries} tentativas: {e}")
+        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] [ERRO] ERRO ao conectar com ChromaDB após {max_retries} tentativas: {e}")
         print("Continuando sem ChromaDB...")
         USE_CHROMA = False
 
@@ -181,10 +178,31 @@ def extrair_variaveis_llm(texto, link):
                 temperature=0
             )
 
+            resposta_llm = resp.choices[0].message.content
+
+            # Limpar markdown code blocks se existirem (fazer múltiplas vezes para garantir)
+            resposta_limpa = resposta_llm.strip()
+
+            # Remover blocos de código markdown
+            if "```json" in resposta_limpa:
+                # Extrair apenas o conteúdo entre ```json e ```
+                import re
+                match = re.search(r'```json\s*(.*?)\s*```', resposta_limpa, re.DOTALL)
+                if match:
+                    resposta_limpa = match.group(1).strip()
+            elif "```" in resposta_limpa:
+                resposta_limpa = resposta_limpa.replace("```", "").strip()
+
+            print(f"[LLM] Resposta do chunk {i} (primeiros 200 chars):")
+            print(f"{resposta_limpa[:200]}...")
+
             try:
-                dados = json.loads(resp.choices[0].message.content)
-            except:
-                dados = {"erro": "resposta inválida", "raw": resp.choices[0].message.content}
+                dados = json.loads(resposta_limpa)
+                print(f"[OK] JSON válido extraído do chunk {i}")
+            except Exception as e:
+                print(f"[ERRO] Resposta não é JSON válido: {e}")
+                print(f"[DEBUG] Conteúdo recebido: {resposta_limpa[:300]}")
+                dados = {"erro": "resposta inválida", "raw": resposta_limpa[:1000]}
 
             dados["link"] = link
             dados["chunk_index"] = i
@@ -221,21 +239,21 @@ def extrair_variaveis_llm(texto, link):
                         metadata["erro_extracao"] = dados.get("erro")
                     
                     # Adicionar ao ChromaDB
-                    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] 💾 Salvando chunk {i} no ChromaDB...")
+                    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] [SAVE] Salvando chunk {i} no ChromaDB...")
                     collection.add(
                         documents=[chunk],
                         metadatas=[metadata],
                         ids=[doc_id]
                     )
-                    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ✅ Chunk {i} processado e adicionado ao ChromaDB com sucesso")
+                    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] [OK] Chunk {i} processado e adicionado ao ChromaDB com sucesso")
                 except Exception as e:
-                    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ❌ ERRO ao adicionar ao ChromaDB: {e}")
+                    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] [ERRO] ERRO ao adicionar ao ChromaDB: {e}")
                     print("Continuando sem salvar no ChromaDB...")
             else:
-                print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ✅ Chunk {i} processado (ChromaDB desativado)")
-            
+                print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] [OK] Chunk {i} processado (ChromaDB desativado)")
+
         except Exception as e:
-            print(f"❌ Erro ao processar chunk {i}: {str(e)}")
+            print(f"[ERRO] Erro ao processar chunk {i}: {str(e)}")
             resultados.append({"erro": str(e), "link": link, "chunk_index": i})
 
     return resultados
@@ -290,7 +308,7 @@ def raspar_cnpq():
                 }
                 
                 chamadas.append(chamada_info)
-                print(f"  ✓ Chamada {idx}: {href}")
+                print(f"  [+] Chamada {idx}: {href}")
         
         # ESTRATÉGIA FALLBACK: Se não encontrou nada, buscar links que apontam para resultado.cnpq.br
         if len(chamadas) == 0:
@@ -305,7 +323,7 @@ def raspar_cnpq():
                     'link_chamada': href
                 }
                 chamadas.append(chamada_info)
-                print(f"  ✓ Chamada {idx} (fallback): {href}")
+                print(f"  [+] Chamada {idx} (fallback): {href}")
         
         # Estrutura final dos dados
         dados_estruturados = {
@@ -473,31 +491,31 @@ def main():
     
     # Verificar se a chave da API OpenAI está configurada
     if not OPENAI_API_KEY:
-        print("❌ ERRO: OPENAI_API_KEY não está configurada nas variáveis de ambiente.")
+        print("[ERRO] ERRO: OPENAI_API_KEY não está configurada nas variáveis de ambiente.")
         print("   Por favor, configure a variável de ambiente OPENAI_API_KEY.")
         return None, None, None, None
-    
+
     # Verificar conexão com ChromaDB apenas se estiver ativado
     if use_chroma:
         try:
             print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Verificando conexão com ChromaDB...")
             if chroma_client and collection:
-                print(f"✅ Conexão com ChromaDB já estabelecida anteriormente.")
+                print(f"[OK] Conexão com ChromaDB já estabelecida anteriormente.")
             else:
-                print(f"❌ ChromaDB não inicializado corretamente.")
+                print(f"[ERRO] ChromaDB não inicializado corretamente.")
                 print("   Continuando sem ChromaDB...")
                 use_chroma = False
         except Exception as e:
-            print(f"❌ ERRO ao verificar ChromaDB: {e}")
+            print(f"[ERRO] ERRO ao verificar ChromaDB: {e}")
             print("   Continuando sem ChromaDB...")
             use_chroma = False
-    
+
     # Executar raspagem
     dados_cnpq = raspar_cnpq()
-    
+
     # Verificar se a raspagem foi bem-sucedida
     if dados_cnpq['metadata']['status'] != 'sucesso':
-        print("❌ Erro durante a raspagem. Verifique os logs acima.")
+        print("[ERRO] Erro durante a raspagem. Verifique os logs acima.")
         return dados_cnpq, [], [], []
     
     # Extrair links das chamadas
@@ -529,9 +547,9 @@ def main():
                     'link': link,
                     'variaveis': vars_extraidas
                 })
-                print(f"✅ Variáveis extraídas com sucesso para {link}")
+                print(f"[OK] Variáveis extraídas com sucesso para {link}")
             except Exception as e:
-                print(f"❌ ERRO ao extrair variáveis: {e}")
+                print(f"[ERRO] ERRO ao extrair variáveis: {e}")
                 variaveis_extraidas.append({
                     'link': link,
                     'erro': str(e)
@@ -552,12 +570,12 @@ def main():
         json.dump(variaveis_extraidas, f, indent=2, ensure_ascii=False)
     
     print("\n" + "=" * 80)
-    print(f"✅ PROCESSAMENTO CONCLUÍDO!")
-    print(f"📊 Estatísticas:")
+    print(f"[OK] PROCESSAMENTO CONCLUÍDO!")
+    print(f"Estatísticas:")
     print(f"   - Chamadas encontradas: {len(dados_cnpq.get('chamadas', []))}")
     print(f"   - Chamadas processadas: {len(resultados_chamadas)}")
     print(f"   - PDFs com variáveis extraídas: {len(variaveis_extraidas)}")
-    print(f"\n📁 Resultados salvos em:")
+    print(f"\nResultados salvos em:")
     print(f"   - resultados/cnpq_chamadas_{timestamp}.json")
     print(f"   - resultados/variaveis_extraidas_{timestamp}.json")
     print("=" * 80)
@@ -570,13 +588,13 @@ if __name__ == "__main__":
         # Executar e capturar os retornos
         cnpq_chamadas, cnpq_links_extraidos, conteudos_chamadas, variaveis_extraidas = main()
         print("\n\n" + "=" * 80)
-        print("\u2705 PROCESSAMENTO CONCLUÍDO COM SUCESSO!")
+        print("[OK] PROCESSAMENTO CONCLUÍDO COM SUCESSO!")
         print("=" * 80)
     except KeyboardInterrupt:
         print("\n\n" + "=" * 80)
-        print("\u274c PROCESSAMENTO INTERROMPIDO PELO USUÁRIO")
+        print("[CANCELADO] PROCESSAMENTO INTERROMPIDO PELO USUÁRIO")
         print("=" * 80)
     except Exception as e:
         print("\n\n" + "=" * 80)
-        print(f"\u274c ERRO: {e}")
+        print(f"[ERRO] ERRO: {e}")
         print("=" * 80)
