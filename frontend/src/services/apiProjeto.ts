@@ -1,16 +1,26 @@
-// Interface para os dados do projeto
+// Interface atualizada para corresponder ao backend
 export interface DadosProjeto {
   id?: string;
-  nomeProjeto: string;
-  descricao: string;
-  objetivoPrincipal?: string;
-  areaProjeto?: string;
-  orcamento?: number;
-  dataInicio?: string;
-  dataFim?: string;
-  usuarioId?: string;
-  dataCriacao?: string;
-  dataAtualizacao?: string;
+  
+  // Dados do Projeto
+  titulo_projeto: string;
+  objetivo_principal: string;
+  
+  // Dados da Empresa
+  nome_empresa: string;
+  resumo_atividades: string;
+  cnae: string;
+  
+  // Documento opcional (backend tem, mas não vamos usar na v1)
+  documento_url?: string;
+  
+  // Relacionamentos
+  user_id?: string;
+  edital_uuid?: string;
+  
+  // Timestamps
+  created_at?: string;
+  updated_at?: string;
 }
 
 // Interface para resposta da API
@@ -20,23 +30,18 @@ interface RespostaApi<T> {
   mensagem: string;
 }
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+
 /**
  * Classe de serviço para gerenciar projetos na API
  */
 class ServicoApiProjeto {
-  private urlBase = '/api/v1';
-  private projetosLocais: DadosProjeto[] = [];
-  
-  constructor() {
-    // Carregar projetos do localStorage ao inicializar
-    const projetosSalvos = localStorage.getItem('projetos');
-    if (projetosSalvos) {
-      this.projetosLocais = JSON.parse(projetosSalvos);
-    }
-  }
-  
-  private salvarNoLocalStorage() {
-    localStorage.setItem('projetos', JSON.stringify(this.projetosLocais));
+  private getHeaders() {
+    const token = localStorage.getItem('auth_token');
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': token ? `Bearer ${token}` : '',
+    };
   }
   
   /**
@@ -44,16 +49,18 @@ class ServicoApiProjeto {
    */
   async listarProjetos(): Promise<RespostaApi<DadosProjeto[]>> {
     try {
-      // Em uma implementação real, isso seria uma chamada à API
-      // const resposta = await apiCliente.get(`${this.urlBase}/projetos`);
-      // return resposta.data;
+      const response = await fetch(`${API_BASE_URL}/api/projects`, {
+        headers: this.getHeaders(),
+      });
+
+      if (!response.ok) {
+        throw new Error('Erro ao listar projetos');
+      }
+
+      const dados = await response.json();
       
-      // Simulação de resposta da API
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Retornar apenas projetos salvos localmente
       return {
-        dados: this.projetosLocais,
+        dados,
         sucesso: true,
         mensagem: 'Projetos carregados com sucesso'
       };
@@ -72,26 +79,18 @@ class ServicoApiProjeto {
    */
   async obterProjeto(id: string): Promise<RespostaApi<DadosProjeto>> {
     try {
-      // Em uma implementação real, isso seria uma chamada à API
-      // const resposta = await apiCliente.get(`${this.urlBase}/projetos/${id}`);
-      // return resposta.data;
-      
-      // Simulação de resposta da API
-      await new Promise(resolve => setTimeout(resolve, 300));
-      
-      // Simular projeto encontrado
-      const projeto = {
-        id,
-        nomeProjeto: 'Projeto de Educação Ambiental',
-        descricao: 'Iniciativa para conscientização sobre preservação ambiental em escolas públicas',
-        objetivoPrincipal: 'Conscientizar estudantes sobre a importância da preservação ambiental',
-        areaProjeto: 'Educação Ambiental',
-        orcamento: 50000,
-        dataCriacao: '2023-10-15'
-      };
+      const response = await fetch(`${API_BASE_URL}/api/projects/${id}`, {
+        headers: this.getHeaders(),
+      });
+
+      if (!response.ok) {
+        throw new Error('Erro ao buscar projeto');
+      }
+
+      const dados = await response.json();
       
       return {
-        dados: projeto,
+        dados,
         sucesso: true,
         mensagem: 'Projeto encontrado com sucesso'
       };
@@ -110,51 +109,27 @@ class ServicoApiProjeto {
    */
   async salvarProjeto(dadosProjeto: DadosProjeto): Promise<RespostaApi<DadosProjeto>> {
     try {
-      let projetoSalvo: DadosProjeto;
+      const url = dadosProjeto.id 
+        ? `${API_BASE_URL}/api/projects/${dadosProjeto.id}`
+        : `${API_BASE_URL}/api/projects`;
       
-      // Em uma implementação real, isso seria uma chamada à API
-      if (dadosProjeto.id) {
-        // Atualiza um projeto existente
-        // resposta = await apiCliente.put(`${this.urlBase}/projetos/${dadosProjeto.id}`, dadosProjeto);
-        
-        // Simulação de resposta da API para atualização
-        await new Promise(resolve => setTimeout(resolve, 400));
-        
-        const index = this.projetosLocais.findIndex(p => p.id === dadosProjeto.id);
-        if (index !== -1) {
-          this.projetosLocais[index] = {
-            ...dadosProjeto,
-            dataAtualizacao: new Date().toISOString()
-          };
-          projetoSalvo = this.projetosLocais[index];
-        } else {
-          projetoSalvo = {
-            ...dadosProjeto,
-            dataAtualizacao: new Date().toISOString()
-          };
-        }
-      } else {
-        // Cria um novo projeto
-        // resposta = await apiCliente.post(`${this.urlBase}/projetos`, dadosProjeto);
-        
-        // Simulação de resposta da API para criação
-        await new Promise(resolve => setTimeout(resolve, 400));
-        
-        projetoSalvo = {
-          ...dadosProjeto,
-          id: Math.random().toString(36).substring(2, 15),
-          dataCriacao: new Date().toISOString(),
-          dataAtualizacao: new Date().toISOString()
-        };
-        
-        this.projetosLocais.push(projetoSalvo);
+      const method = dadosProjeto.id ? 'PUT' : 'POST';
+
+      const response = await fetch(url, {
+        method,
+        headers: this.getHeaders(),
+        body: JSON.stringify(dadosProjeto),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || 'Erro ao salvar projeto');
       }
-      
-      // Salvar no localStorage
-      this.salvarNoLocalStorage();
+
+      const dados = await response.json();
       
       return {
-        dados: projetoSalvo,
+        dados,
         sucesso: true,
         mensagem: dadosProjeto.id ? 'Projeto atualizado com sucesso' : 'Projeto criado com sucesso'
       };
@@ -173,12 +148,15 @@ class ServicoApiProjeto {
    */
   async excluirProjeto(id: string): Promise<RespostaApi<void>> {
     try {
-      // Em uma implementação real, isso seria uma chamada à API
-      // await apiCliente.delete(`${this.urlBase}/projetos/${id}`);
-      
-      // Simulação de resposta da API
-      await new Promise(resolve => setTimeout(resolve, 300));
-      
+      const response = await fetch(`${API_BASE_URL}/api/projects/${id}`, {
+        method: 'DELETE',
+        headers: this.getHeaders(),
+      });
+
+      if (!response.ok) {
+        throw new Error('Erro ao excluir projeto');
+      }
+
       return {
         dados: undefined,
         sucesso: true,
