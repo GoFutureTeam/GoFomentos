@@ -23,7 +23,7 @@ export const ContextoAutenticacao = createContext<ValorContextoAutenticacao | un
  */
 export const ProvedorAutenticacao = ({ children }: { children: ReactNode }) => {
   // Estado para controlar se o usuário está autenticado
-  const [autenticado, setAutenticado] = useState<boolean>(() => !!localStorage.getItem('tokenAutenticacao'));
+  const [autenticado, setAutenticado] = useState<boolean>(() => !!localStorage.getItem('auth_token'));
   
   // Estado para armazenar os dados do usuário
   const [usuario, setUsuario] = useState<Usuario | null>(() => {
@@ -35,7 +35,7 @@ export const ProvedorAutenticacao = ({ children }: { children: ReactNode }) => {
    * Função para autenticar o usuário
    */
   const entrar = (dadosUsuario: Usuario, token: string) => {
-    localStorage.setItem('tokenAutenticacao', token);
+    localStorage.setItem('auth_token', token);
     localStorage.setItem('usuario', JSON.stringify(dadosUsuario));
     setUsuario(dadosUsuario);
     setAutenticado(true);
@@ -45,7 +45,7 @@ export const ProvedorAutenticacao = ({ children }: { children: ReactNode }) => {
    * Função para deslogar o usuário
    */
   const sair = () => {
-    localStorage.removeItem('tokenAutenticacao');
+    localStorage.removeItem('auth_token');
     localStorage.removeItem('usuario');
     setUsuario(null);
     setAutenticado(false);

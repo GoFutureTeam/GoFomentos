@@ -19,7 +19,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Criar pastas necessárias
-RUN mkdir -p output/editais_json temp/pdfs
+RUN mkdir -p output/cnpq temp
 
-# Comando padrão
-CMD ["python", "test_cnpq.py"]
+# Comando padrão - Executa o scraper do CNPq
+CMD ["python", "CNPQ.py"]
