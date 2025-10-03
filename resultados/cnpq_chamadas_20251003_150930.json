@@ -1,0 +1,32 @@
+{
+  "metadata": {
+    "fonte": "CNPq - Chamadas Públicas Abertas",
+    "url": "http://memoria2.cnpq.br/web/guest/chamadas-publicas?p_p_id=resultadosportlet_WAR_resultadoscnpqportlet_INSTANCE_0ZaM&filtro=abertas/",
+    "data_raspagem": "2025-10-03T15:07:20.980573",
+    "total_chamadas_encontradas": 5,
+    "estrategia_usada": "links-normas",
+    "status": "sucesso"
+  },
+  "chamadas": [
+    {
+      "id": 1,
+      "link_chamada": "http://resultado.cnpq.br/1077219938298918"
+    },
+    {
+      "id": 3,
+      "link_chamada": "http://resultado.cnpq.br/7037548665044968"
+    },
+    {
+      "id": 4,
+      "link_chamada": "http://resultado.cnpq.br/0514387462664420"
+    },
+    {
+      "id": 5,
+      "link_chamada": "http://resultado.cnpq.br/3531717483915368"
+    },
+    {
+      "id": 6,
+      "link_chamada": "http://resultado.cnpq.br/5545417941231944"
+    }
+  ]
+}
