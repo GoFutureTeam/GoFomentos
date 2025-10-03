@@ -6,11 +6,12 @@ from ..models.edital import Edital, EditalCreate, EditalUpdate
 from ..services.mongo_service import MongoService
 from ..services.chroma_service import ChromaService
 from ..services.auth_service import get_current_user
-from ...processors.pdf_downloader import PDFDownloader
-from ...processors.pdf_extractor import PDFExtractor
-from ...processors.data_extractor import DataExtractor
-from ...processors.embedding_generator import EmbeddingGenerator
-from ...processors.edital_pipeline import process_url
+# TODO: Reimplementar processors
+# from ...processors.pdf_downloader import PDFDownloader
+# from ...processors.pdf_extractor import PDFExtractor
+# from ...processors.data_extractor import DataExtractor
+# from ...processors.embedding_generator import EmbeddingGenerator
+# from ...processors.edital_pipeline import process_url
 import asyncio
 import os
 
@@ -24,106 +25,37 @@ class QueryRequest(BaseModel):
     edital_uuid: Optional[str] = None
     n_results: int = 5
 
+# TODO: Reimplementar após recriar processors
 async def process_edital(url: str):
     """
     Processa um edital: baixa, extrai texto, extrai dados e gera embeddings
+    DESABILITADO - Aguardando reimplementação dos processors
     """
-    try:
-        # Baixar PDF
-        pdf_downloader = PDFDownloader()
-        file_path, edital_uuid = await pdf_downloader.download_pdf(url)
-        
-        try:
-            # Extrair texto
-            pdf_extractor = PDFExtractor()
-            page_texts = pdf_extractor.extract_text_with_pymupdf(file_path)
-            
-            # Criar chunks
-            all_chunks = []
-            page_numbers = []
-            
-            for text, page_num in page_texts:
-                chunks = pdf_extractor.chunk_text(text)
-                all_chunks.extend(chunks)
-                page_numbers.extend([page_num] * len(chunks))
-            
-            # Extrair dados estruturados
-            data_extractor = DataExtractor()
-            extracted_data_list = []
-            
-            for chunk in all_chunks:
-                extracted_data = data_extractor.extract_data_from_chunk(chunk, edital_uuid, url)
-                extracted_data_list.append(extracted_data)
-            
-            # Consolidar dados
-            consolidated_data = data_extractor.consolidate_data(extracted_data_list)
-            
-            # Criar edital no MongoDB
-            edital_create = EditalCreate(**consolidated_data)
-            await MongoService.create_edital(edital_create)
-            
-            # Gerar embeddings e armazenar no ChromaDB
-            embedding_generator = EmbeddingGenerator()
-            embedding_generator.generate_and_store_embeddings(
-                chunks=all_chunks,
-                edital_uuid=edital_uuid,
-                pdf_url=url,
-                page_numbers=page_numbers
-            )
-        finally:
-            # Limpar arquivo temporário
-            if os.path.exists(file_path):
-                os.remove(file_path)
-        
-    except Exception as e:
-        print(f"Erro ao processar edital {url}: {e}")
-        raise e
+    raise HTTPException(
+        status_code=status.HTTP_501_NOT_IMPLEMENTED,
+        detail="Funcionalidade temporariamente desabilitada. Processors em reimplementação."
+    )
+# TODO: Reimplementar após recriar processors
 @router.post("/post/editais/fetch")
 async def post_editais_fetch(request: FetchEditaisRequest, current_user: User = Depends(get_current_user)):
     """
-    Executa o pipeline completo solicitado para uma URL de origem e retorna o relatório.
-    - Renderiza HTML
-    - Extrai candidatos
-    - Pré-filtra por prazo
-    - Valida via LLM
-    - Baixa, extrai texto, chunking e indexa no Chroma
-    - Extrai JSON final com map/reduce + gap-filling
-    - Upsert no store canônico (Mongo)
-    - Gera relatório
+    DESABILITADO - Aguardando reimplementação dos processors
     """
-    try:
-        report = process_url(request.url)
-        return report
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Erro no pipeline de editais: {str(e)}"
-        )
+    raise HTTPException(
+        status_code=status.HTTP_501_NOT_IMPLEMENTED,
+        detail="Funcionalidade temporariamente desabilitada. Processors em reimplementação."
+    )
 
+# TODO: Reimplementar após recriar processors
 @router.post("/editais/fetch")
 async def fetch_editais(request: FetchEditaisRequest, background_tasks: BackgroundTasks, current_user: User = Depends(get_current_user)):
     """
-    Busca e processa editais de uma URL
+    DESABILITADO - Aguardando reimplementação dos processors
     """
-    try:
-        # Obter links de editais
-        pdf_downloader = PDFDownloader()
-        links = await pdf_downloader.get_edital_links(request.url)
-        
-        # Processar cada edital em background
-        for link in links:
-            background_tasks.add_task(process_edital, link)
-        
-        return {
-            "status": "Processing started",
-            "links_found": len(links),
-            "links": links
-        }
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error fetching editais: {str(e)}"
-        )
+    raise HTTPException(
+        status_code=status.HTTP_501_NOT_IMPLEMENTED,
+        detail="Funcionalidade temporariamente desabilitada. Processors em reimplementação."
+    )
 
 @router.post("/editais", response_model=Edital, status_code=status.HTTP_201_CREATED)
 async def create_edital(edital: EditalCreate, current_user: User = Depends(get_current_user)):
