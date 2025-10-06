@@ -1,16 +1,14 @@
-version: '3.8'
-
 services:
   api:
     build:
-      context: ./backend
-      dockerfile: docker/Dockerfile
+      context: .
+      dockerfile: Dockerfile
     ports:
       - "8000:8000"
     volumes:
-      - ./backend:/app
+      - .:/app
     env_file:
-      - ./backend/.env
+      - .env
     depends_on:
       - mongo
       - chroma
@@ -36,9 +34,25 @@ services:
     volumes:
       - chroma_data:/chroma/chroma
     ports:
-      - "8001:8001"
+      - "8001:8000"
     networks:
       - app-network
+    restart: unless-stopped
+
+  chroma-visualizer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: python servidor_visualizador.py
+    ports:
+      - "5000:5000"
+    depends_on:
+      - chroma
+    networks:
+      - app-network
+    environment:
+      - CHROMA_HOST=chroma
+      - CHROMA_PORT=8000
     restart: unless-stopped
 
 networks:
