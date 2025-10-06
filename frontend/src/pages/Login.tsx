@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAutenticacaoPortugues } from '@/hooks/useAutenticacaoPortugues';
 import { useToast } from '@/hooks/use-toast';
+import { authApi } from '@/services/apiAuth';
 
 // Esquema de validação para o formulário
 const esquemaLogin = z.object({
@@ -28,35 +29,33 @@ const Login: React.FC = () => {
   
   const aoEnviar = async (dados: DadosLogin) => {
     try {
-      // Simulação de chamada à API
-      // Em uma aplicação real, isso seria uma chamada à API de autenticação
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Simular resposta da API
-      const respostaSimulada = {
-        usuario: {
-          id: '1',
-          nome: 'Usuário Teste',
-          email: dados.email
-        },
-        token: 'token-simulado-123456'
-      };
-      
-      entrar(respostaSimulada.usuario, respostaSimulada.token);
-      
-      // Notificar sucesso
-      toast({
-        title: 'Login realizado com sucesso!',
-        description: `Bem-vindo de volta, ${respostaSimulada.usuario.nome}!`
+      // Chamada real à API
+      const resposta = await authApi.login({
+        email: dados.email,
+        password: dados.senha
       });
       
-      // Redirecionar para a página inicial
+      // Usar dados reais do backend
+      entrar(
+        {
+          id: resposta.user.id,
+          nome: resposta.user.name,
+          email: resposta.user.email
+        },
+        resposta.access_token
+      );
+      
+      toast({
+        title: 'Login realizado com sucesso!',
+        description: `Bem-vindo de volta, ${resposta.user.name}!`
+      });
+      
       navigate('/');
     } catch (erro) {
       console.error('Erro ao fazer login:', erro);
       toast({
         title: 'Erro ao fazer login',
-        description: 'Verifique suas credenciais e tente novamente.',
+        description: erro instanceof Error ? erro.message : 'Verifique suas credenciais e tente novamente.',
         variant: 'destructive'
       });
     }

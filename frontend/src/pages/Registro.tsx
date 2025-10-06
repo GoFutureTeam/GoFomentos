@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { useAutenticacaoPortugues } from '@/hooks/useAutenticacaoPortugues';
 import { useToast } from '@/hooks/use-toast';
+import { authApi } from '@/services/apiAuth';
 
 const esquemaRegistro = z.object({
   nome: z.string().min(2, 'O nome deve ter pelo menos 2 caracteres'),
@@ -36,18 +37,27 @@ const Registro: React.FC = () => {
   
   const aoEnviar = async (dados: DadosRegistro) => {
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // 1. Registrar usuário
+      await authApi.register({
+        email: dados.email,
+        name: `${dados.nome} ${dados.sobrenome}`,
+        password: dados.senha
+      });
       
-      const respostaSimulada = {
-        usuario: {
-          id: '1',
-          nome: `${dados.nome} ${dados.sobrenome}`,
-          email: dados.email
+      // 2. Fazer login automaticamente
+      const resposta = await authApi.login({
+        email: dados.email,
+        password: dados.senha
+      });
+      
+      entrar(
+        {
+          id: resposta.user.id,
+          nome: resposta.user.name,
+          email: resposta.user.email
         },
-        token: 'token-simulado-123456'
-      };
-      
-      entrar(respostaSimulada.usuario, respostaSimulada.token);
+        resposta.access_token
+      );
       
       toast({
         title: 'Cadastro realizado!',
@@ -58,7 +68,7 @@ const Registro: React.FC = () => {
     } catch (erro) {
       toast({
         title: 'Erro no cadastro',
-        description: 'Não foi possível realizar o cadastro. Tente novamente.',
+        description: erro instanceof Error ? erro.message : 'Não foi possível realizar o cadastro. Tente novamente.',
         variant: 'destructive',
       });
     }
