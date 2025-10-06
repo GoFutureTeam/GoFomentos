@@ -1,4 +1,4 @@
-// import { jwtDecode } from 'jwt-decode'; // Removido - não necessário para o backend atual
+import TokenService from './tokenService';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8002';
 
@@ -19,7 +19,7 @@ export interface LoginResponse {
 
 export interface RegisterRequest {
   email: string;
-  name: string;
+  name: string;  // Backend espera 'name', não 'nome' e 'sobrenome'
   password: string;
 }
 
@@ -39,34 +39,36 @@ export interface PasswordResetResponse {
 // }
 
 class AuthService {
-  private readonly TOKEN_KEY = 'auth_token';
   private readonly USER_KEY = 'auth_user';
 
   async login(credentials: LoginRequest): Promise<LoginResponse> {
     try {
-      const formData = new URLSearchParams();
-      formData.append('username', credentials.email);
-      formData.append('password', credentials.password);
-
       const response = await fetch(`${API_BASE_URL}/login`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
+          'Content-Type': 'application/json',
         },
-        body: formData,
+        body: JSON.stringify({
+          email: credentials.email,
+          password: credentials.password,
+        }),
       });
 
       if (!response.ok) {
         if (response.status === 401) {
           throw new Error('Email ou senha incorretos');
         }
+        if (response.status === 422) {
+          const errorData = await response.json();
+          throw new Error(errorData.detail || 'Dados de login inválidos');
+        }
         throw new Error('Erro ao fazer login');
       }
 
       const data: LoginResponse = await response.json();
       
-      // Armazena o token
-      this.setToken(data.access_token);
+      // Armazena o token usando TokenService (mais seguro)
+      TokenService.setTokens(data.access_token, '', true);
       
       // Busca e armazena os dados do usuário
       await this.fetchAndStoreUserData(data.access_token);
@@ -85,12 +87,20 @@ class AuthService {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(userData),
+        body: JSON.stringify({
+          email: userData.email,
+          name: userData.name,  // Nome completo
+          password: userData.password,
+        }),
       });
 
       if (!response.ok) {
         if (response.status === 400) {
           throw new Error('Email já cadastrado');
+        }
+        if (response.status === 422) {
+          const errorData = await response.json();
+          throw new Error(errorData.detail || 'Dados de registro inválidos. Verifique os campos.');
         }
         throw new Error('Erro ao criar conta');
       }
@@ -125,42 +135,14 @@ class AuthService {
     }
   }
 
-  setToken(token: string): void {
-    localStorage.setItem(this.TOKEN_KEY, token);
-  }
-
   getToken(): string | null {
-    const token = localStorage.getItem(this.TOKEN_KEY);
-    
-    if (!token) {
-      return null;
-    }
-
-    // Comentado - verificação de expiração do token não é necessária para o backend atual
-    // if (this.isTokenExpired(token)) {
-    //   this.logout();
-    //   return null;
-    // }
-
-    return token;
+    // Usar TokenService que já valida expiração
+    return TokenService.getAccessToken();
   }
-
-  // Comentado - não necessário para o backend atual
-  // isTokenExpired(token: string): boolean {
-  //   try {
-  //     const decoded: DecodedToken = jwtDecode(token);
-  //     const currentTime = Date.now() / 1000;
-  //     return decoded.exp < currentTime;
-  //   } catch (error) {
-  //     return true;
-  //   }
-  // }
 
   isAuthenticated(): boolean {
-    const token = this.getToken();
-    return token !== null;
-    // Comentado - verificação de expiração
-    // return token !== null && !this.isTokenExpired(token);
+    // TokenService.getAccessToken() já retorna null se token expirado
+    return TokenService.isAccessTokenValid();
   }
 
   getCurrentUser(): unknown | null {
@@ -180,7 +162,8 @@ class AuthService {
   }
 
   logout(): void {
-    localStorage.removeItem(this.TOKEN_KEY);
+    // Limpar tokens usando TokenService
+    TokenService.clearTokens();
     localStorage.removeItem(this.USER_KEY);
   }
 

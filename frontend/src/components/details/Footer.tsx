@@ -13,9 +13,9 @@ const Footer = () => {
       backgroundPosition: 'center',
       backgroundRepeat: 'no-repeat'
     }} className="relative rounded-none">
-        <div className="flex flex-col lg:flex-row items-center justify-center gap-8 py-8 px-8 max-w-4xl mx-auto">
-          <div className="text-center">
-            <p className="font-archivo font-medium italic text-black text-lg mb-1">
+        <div className="flex flex-col lg:flex-row items-center justify-center gap-4 lg:gap-6 py-8 px-8 max-w-5xl mx-auto">
+          <div className="text-center lg:text-left">
+            <p className="font-archivo font-medium italic text-[rgba(67,80,88,1)] text-base lg:text-lg mb-1">
               Quer mais informações? Entre em contato!
             </p>
             <h2 className="text-[rgba(67,80,88,1)] text-2xl lg:text-3xl font-extrabold">
@@ -23,8 +23,8 @@ const Footer = () => {
             </h2>
           </div>
           
-          <button onClick={handleEmailClick} className="bg-[#DCF763] text-black text-base font-medium px-6 py-3 rounded-[25px] flex-shrink-0 hover:bg-[#DCF763]/90 transition-colors">
-            E-mail: contatogofuture@gmail.com
+          <button onClick={handleEmailClick} className="bg-white text-[rgba(67,80,88,1)] text-base font-semibold px-6 py-3 rounded-[25px] flex-shrink-0 hover:bg-white/90 transition-colors shadow-md whitespace-nowrap">
+            <span className="font-bold">E-mail:</span> contatogofuture@gmail.com
           </button>
         </div>
         

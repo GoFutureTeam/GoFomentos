@@ -1,19 +1,15 @@
 import React, { useEffect } from 'react';
-import { useLocation, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import CommonHeader from '../components/CommonHeader';
 import { ProjectForm } from '../components/match/FormularioProjeto';
 import { ProjetosSalvos } from '../components/match/ProjetosSalvos';
-import { MonitoringSection } from '../components/match/MonitoringSection';
 import Footer from '../components/details/Footer';
 import { useProjetoPortugues } from '@/hooks/useProjetoPortugues';
-// Importando a imagem diretamente
-import backgroundImage from '@/assets/uploads/8a170130-d07b-497a-9e68-ec6bb3ce56bb.png';
 
 const Matchs = () => {
   // Obter o ID do projeto da URL, se existir
   const [searchParams] = useSearchParams();
   const projetoId = searchParams.get('projetoId');
-  const location = useLocation();
   
   // Buscar os dados do projeto, se um ID foi fornecido
   const { projetos } = useProjetoPortugues();
@@ -36,11 +32,11 @@ const Matchs = () => {
     <div className="overflow-hidden">
       <CommonHeader 
         title="Matchs" 
-        description="Faça um match! Encontre empresas intressadas nos mesmos editais que você e formem uma cooperativa. Ou seja avisado automaticamente sempre que um edital compatível com o seu projeto surgir!" 
+        description="Faça um match! Encontre empresas interessadas nos mesmos editais que você e formem uma cooperativa. Ou seja avisado automaticamente sempre que um edital compatível com o seu projeto surgir!" 
         showSecondSection={false} 
       />
       
-      <div className="container mx-auto pt-6">
+      <div className="container mx-auto pt-6 px-4">
         <ProjetosSalvos />
         <div id="formulario-match">
           <ProjectForm projetoInicial={projetoSelecionado} />

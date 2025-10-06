@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -8,14 +8,20 @@ import { Input } from '@/components/ui/input';
 import { useAutenticacaoPortugues } from '@/hooks/useAutenticacaoPortugues';
 import { useToast } from '@/hooks/use-toast';
 import { authApi } from '@/services/apiAuth';
+import { validarSenha, obterForcaSenha } from '@/utils/validacoes';
 
 const esquemaRegistro = z.object({
   nome: z.string().min(2, 'O nome deve ter pelo menos 2 caracteres'),
   sobrenome: z.string().min(2, 'O sobrenome deve ter pelo menos 2 caracteres'),
   email: z.string().email('Email inválido'),
   confirmarEmail: z.string().email('Email inválido'),
-  senha: z.string().min(6, 'A senha deve ter pelo menos 6 caracteres'),
-  confirmarSenha: z.string().min(6, 'A confirmação de senha deve ter pelo menos 6 caracteres')
+  senha: z.string()
+    .min(8, 'A senha deve ter no mínimo 8 caracteres')
+    .regex(/[a-z]/, 'A senha deve conter pelo menos uma letra minúscula (a-z)')
+    .regex(/[A-Z]/, 'A senha deve conter pelo menos uma letra MAIÚSCULA (A-Z)')
+    .regex(/[0-9]/, 'A senha deve conter pelo menos um número (0-9)')
+    .regex(/[@$!%*?&]/, 'A senha deve conter pelo menos um caractere especial (@$!%*?&)'),
+  confirmarSenha: z.string().min(8, 'A confirmação de senha deve ter pelo menos 8 caracteres')
 }).refine((dados) => dados.email === dados.confirmarEmail, {
   message: 'Os emails não coincidem',
   path: ['confirmarEmail']
@@ -31,16 +37,33 @@ const Registro: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<DadosRegistro>({
+  const [senhaAtual, setSenhaAtual] = useState('');
+  const [forcaSenha, setForcaSenha] = useState<{ forca: 'fraca' | 'média' | 'forte'; porcentagem: number; cor: string }>({ 
+    forca: 'fraca', 
+    porcentagem: 0, 
+    cor: '#ef4444' 
+  });
+  
+  const { register, handleSubmit, formState: { errors, isSubmitting }, watch } = useForm<DadosRegistro>({
     resolver: zodResolver(esquemaRegistro)
   });
   
+  // Observa mudanças na senha para atualizar o indicador de força
+  const senha = watch('senha');
+  
+  React.useEffect(() => {
+    if (senha) {
+      setSenhaAtual(senha);
+      setForcaSenha(obterForcaSenha(senha));
+    }
+  }, [senha]);
+  
   const aoEnviar = async (dados: DadosRegistro) => {
     try {
-      // 1. Registrar usuário
+      // 1. Registrar usuário (concatenando nome e sobrenome)
       await authApi.register({
         email: dados.email,
-        name: `${dados.nome} ${dados.sobrenome}`,
+        name: `${dados.nome} ${dados.sobrenome}`,  // Backend espera nome completo
         password: dados.senha
       });
       
@@ -174,10 +197,60 @@ const Registro: React.FC = () => {
                 className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#DCF763] ${
                   errors.senha ? 'border-red-500' : 'border-gray-300'
                 }`}
-                placeholder="••••••"
+                placeholder="••••••••"
               />
+              
+              {/* Barra de força da senha */}
+              {senhaAtual && (
+                <div className="mt-2 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full transition-all duration-300 ease-in-out"
+                        style={{ 
+                          width: `${forcaSenha.porcentagem}%`,
+                          backgroundColor: forcaSenha.cor
+                        }}
+                      />
+                    </div>
+                    <span className="text-xs font-semibold capitalize" style={{ color: forcaSenha.cor }}>
+                      {forcaSenha.forca}
+                    </span>
+                  </div>
+                </div>
+              )}
+              
+              {/* Lista de requisitos */}
+              {senhaAtual && (
+                <div className="mt-2 p-3 bg-gray-50 rounded-md border border-gray-200">
+                  <p className="text-xs font-semibold text-gray-700 mb-2">A senha deve conter:</p>
+                  <ul className="space-y-1 text-xs">
+                    <li className={`flex items-center gap-2 ${senhaAtual.length >= 8 ? 'text-green-600' : 'text-gray-500'}`}>
+                      <span className="font-bold">{senhaAtual.length >= 8 ? '✓' : '○'}</span>
+                      Mínimo 8 caracteres
+                    </li>
+                    <li className={`flex items-center gap-2 ${/[a-z]/.test(senhaAtual) ? 'text-green-600' : 'text-gray-500'}`}>
+                      <span className="font-bold">{/[a-z]/.test(senhaAtual) ? '✓' : '○'}</span>
+                      1 letra minúscula (a-z)
+                    </li>
+                    <li className={`flex items-center gap-2 ${/[A-Z]/.test(senhaAtual) ? 'text-green-600' : 'text-gray-500'}`}>
+                      <span className="font-bold">{/[A-Z]/.test(senhaAtual) ? '✓' : '○'}</span>
+                      1 letra MAIÚSCULA (A-Z)
+                    </li>
+                    <li className={`flex items-center gap-2 ${/[0-9]/.test(senhaAtual) ? 'text-green-600' : 'text-gray-500'}`}>
+                      <span className="font-bold">{/[0-9]/.test(senhaAtual) ? '✓' : '○'}</span>
+                      1 número (0-9)
+                    </li>
+                    <li className={`flex items-center gap-2 ${/[@$!%*?&]/.test(senhaAtual) ? 'text-green-600' : 'text-gray-500'}`}>
+                      <span className="font-bold">{/[@$!%*?&]/.test(senhaAtual) ? '✓' : '○'}</span>
+                      1 caractere especial (@$!%*?&)
+                    </li>
+                  </ul>
+                </div>
+              )}
+              
               {errors.senha && (
-                <p className="text-red-500 text-xs">{errors.senha.message}</p>
+                <p className="text-red-500 text-xs mt-1">{errors.senha.message}</p>
               )}
             </div>
             
@@ -192,8 +265,18 @@ const Registro: React.FC = () => {
                 className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#DCF763] ${
                   errors.confirmarSenha ? 'border-red-500' : 'border-gray-300'
                 }`}
-                placeholder="••••••"
+                placeholder="••••••••"
               />
+              {watch('confirmarSenha') && watch('senha') && (
+                <p className={`text-xs flex items-center gap-1 ${
+                  watch('senha') === watch('confirmarSenha') ? 'text-green-600' : 'text-red-500'
+                }`}>
+                  <span className="font-bold">
+                    {watch('senha') === watch('confirmarSenha') ? '✓' : '✗'}
+                  </span>
+                  {watch('senha') === watch('confirmarSenha') ? 'Senhas coincidem' : 'Senhas não coincidem'}
+                </p>
+              )}
               {errors.confirmarSenha && (
                 <p className="text-red-500 text-xs">{errors.confirmarSenha.message}</p>
               )}
@@ -201,8 +284,8 @@ const Registro: React.FC = () => {
             
             <Button
               type="submit"
-              disabled={isSubmitting}
-              className="w-full bg-[#DCF763] text-[rgba(67,80,88,1)] hover:bg-[#DCF763]/90 font-extrabold py-3 mt-2"
+              disabled={isSubmitting || (senhaAtual && !validarSenha(senhaAtual).valida)}
+              className="w-full bg-[#DCF763] text-[rgba(67,80,88,1)] hover:bg-[#DCF763]/90 font-extrabold py-3 mt-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? 'Cadastrando...' : 'Cadastrar'}
             </Button>
