@@ -1,19 +1,53 @@
-from fastapi import FastAPI, HTTPException, status
+"""
+FastAPI Application - Entry Point
+Refatorado seguindo Clean Architecture
+"""
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from datetime import timedelta
+from fastapi.responses import FileResponse
+from pathlib import Path
 import uvicorn
 
-from .api.endpoints import health, users, editais, projects
-from .api.services.auth_service import authenticate_user, create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES
-from .api.models.user import LoginRequest
-from .db.mongodb import mongodb
-from .db.chromadb import chromadb_client
+# Importar routers refatorados
+from .presentation.api.v1.endpoints import auth, users, editais, projects, health, chroma, jobs
+
+# Importar container singleton e configurações
+from .core.container_instance import container
 from .core.config import settings
 
+# Criar aplicação FastAPI
 app = FastAPI(
     title=settings.PROJECT_NAME,
-    description="API para gerenciamento de editais com MongoDB e ChromaDB\n\n## 🔐 Autenticação\n\n**Para usar a API:**\n\n1. **Faça Login** no endpoint `/login` com seu email e senha\n2. **Copie o token JWT** retornado no campo `access_token`\n3. **Clique em 'Authorize' 🔓** no topo da página\n4. **Cole apenas o token** (sem a palavra 'Bearer')\n5. **Clique em 'Authorize'** e depois 'Close'\n\nAgora você pode usar todos os endpoints protegidos! 🎉",
-    version="0.1.0",
+    description="""
+API para gerenciamento de editais com MongoDB e ChromaDB (Clean Architecture)
+
+## 🔐 Autenticação
+
+**Para usar a API:**
+
+1. **Faça Login** no endpoint `/login` com seu email e senha
+2. **Copie o token JWT** retornado no campo `access_token`
+3. **Clique em 'Authorize' 🔓** no topo da página
+4. **Cole apenas o token** (sem a palavra 'Bearer')
+5. **Clique em 'Authorize'** e depois 'Close'
+
+Agora você pode usar todos os endpoints protegidos! 🎉
+
+## 🏗️ Arquitetura
+
+Esta API foi construída seguindo os princípios de **Clean Architecture** e **Domain-Driven Design (DDD)**:
+
+- **Domain Layer**: Entidades e regras de negócio puras
+- **Application Layer**: Casos de uso (orquestração)
+- **Infrastructure Layer**: Implementações concretas (MongoDB, segurança)
+- **Presentation Layer**: Controllers e schemas (FastAPI)
+
+Benefícios:
+- ✅ Código desacoplado e testável
+- ✅ Fácil manutenção e escalabilidade
+- ✅ Independência de frameworks e databases
+""",
+    version="2.0.0",
 )
 
 # Configurar CORS
@@ -25,84 +59,101 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 # Eventos de inicialização e encerramento
 @app.on_event("startup")
-async def startup_db_client():
-    await mongodb.connect_to_database()
-    chromadb_client.connect_to_database()
+async def startup_event():
+    """Inicializa conexões com bancos de dados"""
+    print("🚀 Iniciando aplicação...")
+
+    # Conectar MongoDB
+    mongodb_conn = container.mongodb_connection()
+    await mongodb_conn.connect()
+
+    # Pré-carregar modelo ChromaDB (evita delay na primeira busca)
+    try:
+        chromadb = container.chromadb_service()
+        chromadb.warmup()
+    except Exception as e:
+        print(f"⚠️ ChromaDB warmup falhou (não crítico): {e}")
+
+    # Inicializar scheduler de jobs
+    scheduler = container.job_scheduler_service()
+    scheduler.start()
+    print("✅ Job Scheduler iniciado (agendado para 01:00 AM)")
+
+    print("✅ Aplicação iniciada com sucesso!")
+
 
 @app.on_event("shutdown")
-async def shutdown_db_client():
-    await mongodb.close_database_connection()
+async def shutdown_event():
+    """Fecha conexões com bancos de dados"""
+    print("🛑 Encerrando aplicação...")
 
-# Rota de autenticação - Login com email e senha
-@app.post("/login", tags=["auth"])
-async def login(credentials: LoginRequest):
-    """
-    Login com email e senha
-    
-    Retorna um JWT token que deve ser usado no header Authorization:
-    
-    ```
-    Authorization: Bearer <seu_token_aqui>
-    ```
-    
-    **Exemplo de requisição:**
-    ```json
-    {
-        "email": "user@example.com",
-        "password": "sua_senha"
-    }
-    ```
-    
-    **Resposta de sucesso:**
-    ```json
-    {
-        "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-        "token_type": "bearer",
-        "user": {
-            "id": "uuid",
-            "email": "user@example.com",
-            "name": "Nome do Usuário"
-        }
-    }
-    ```
-    """
-    user = await authenticate_user(credentials.email, credentials.password)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Email ou senha incorretos",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(
-        data={"sub": user.email}, expires_delta=access_token_expires
-    )
-    return {
-        "access_token": access_token,
-        "token_type": "bearer",
-        "user": {
-            "id": user.id,
-            "email": user.email,
-            "name": user.name
-        }
-    }
+    # Parar scheduler
+    scheduler = container.job_scheduler_service()
+    scheduler.shutdown()
+    print("✅ Job Scheduler encerrado")
 
-# Incluir routers
+    # Encerrar executor de processos dos scrapers
+    cnpq_scraper = container.cnpq_scraper_service()
+    cnpq_scraper.shutdown()
+    print("✅ CNPq Scraper executor encerrado")
+
+    fapesq_scraper = container.fapesq_scraper_service()
+    fapesq_scraper.shutdown()
+    print("✅ FAPESQ Scraper executor encerrado")
+
+    # Desconectar MongoDB
+    mongodb_conn = container.mongodb_connection()
+    await mongodb_conn.disconnect()
+
+    print("✅ Aplicação encerrada!")
+
+
+# Incluir routers (nova estrutura)
+app.include_router(auth.router, tags=["auth"])
 app.include_router(health.router, tags=["health"])
-app.include_router(users.router, prefix="/api", tags=["users"])
-app.include_router(editais.router, prefix="/api", tags=["editais"])
-app.include_router(projects.router, prefix="/api", tags=["projects"])
+app.include_router(users.router, prefix="/api/v1", tags=["users"])
+app.include_router(editais.router, prefix="/api/v1", tags=["editais"])
+app.include_router(projects.router, prefix="/api/v1", tags=["projects"])
+app.include_router(chroma.router, prefix="/api", tags=["chroma"])  # Sem v1 para compatibilidade com visualizer
+app.include_router(jobs.router, prefix="/api/v1", tags=["jobs"])
+
 
 # Rota raiz
 @app.get("/")
 async def root():
-    return {"message": "Bem-vindo à API de Editais"}
+    """Endpoint raiz da API"""
+    return {
+        "message": "Bem-vindo à API de Editais - Clean Architecture",
+        "version": "2.0.0",
+        "architecture": "Clean Architecture + DDD",
+        "docs": "/docs",
+        "health": "/health"
+    }
+
+
+# Rota para servir o visualizador do ChromaDB
+@app.get("/visualizer")
+async def visualizar_chroma():
+    """
+    Serve o visualizador do ChromaDB.
+    Interface web para visualizar os dados armazenados no ChromaDB.
+    """
+    html_path = Path(__file__).parent / "presentation" / "static" / "visualizar_chroma.html"
+    if html_path.exists():
+        return FileResponse(html_path)
+    return {
+        "message": "Visualizer not found",
+        "expected_path": str(html_path),
+        "hint": "Make sure visualizar_chroma.html is in app/presentation/static/"
+    }
+
 
 if __name__ == "__main__":
     uvicorn.run(
-        "main:app",
+        "app.main:app",
         host=settings.API_HOST,
         port=settings.API_PORT,
         reload=settings.DEBUG

@@ -29,7 +29,7 @@ class Settings(BaseSettings):
     
     # ChromaDB
     CHROMA_HOST: str = os.getenv("CHROMA_HOST", "chroma")
-    CHROMA_PORT: int = int(os.getenv("CHROMA_PORT", 8001))
+    CHROMA_PORT: int = int(os.getenv("CHROMA_PORT", 8000))  # Porta interna do container
     CHROMA_COLLECTION: str = os.getenv("CHROMA_COLLECTION", "editais")
     
     # OpenAI
@@ -42,6 +42,11 @@ class Settings(BaseSettings):
     PDF_CHUNK_SIZE: int = int(os.getenv("PDF_CHUNK_SIZE", 1000))
     UUID_NAMESPACE_EDITAIS: str = os.getenv("UUID_NAMESPACE_EDITAIS", "5aa0b3b9-9a85-4f5f-8c28-6f4f2c4b2a10")
     TIMEZONE: str = os.getenv("TIMEZONE", "America/Fortaleza")
+
+    # Job Processing Performance
+    JOB_MAX_WORKERS: int = int(os.getenv("JOB_MAX_WORKERS", 2))  # Número de workers para jobs pesados
+    JOB_CHUNK_DELAY_MS: int = int(os.getenv("JOB_CHUNK_DELAY_MS", 500))  # Delay entre chunks (ms)
+    JOB_PDF_PROCESSING_DELAY_MS: int = int(os.getenv("JOB_PDF_PROCESSING_DELAY_MS", 1000))  # Delay entre PDFs (ms)
     
     @validator("OPENAI_API_KEY")
     def validate_openai_api_key(cls, v):
