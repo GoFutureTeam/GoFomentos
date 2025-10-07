@@ -1,8 +1,11 @@
 import { Edital, EditalCreateData, EditalFilters, EditalEnums, ApiResponse, EditalUpdateData } from '../types/edital';
 import { fixEncoding } from '../lib/utils';
+import { API_ENDPOINTS, buildApiUrl } from './api';
+import { adaptEditalFromBackend, adaptEditalToBackend } from '../adapters/editalAdapter';
+import TokenService from './tokenService';
 
 // Configuração da API
-const URL_BASE_API = 'http://localhost:8002/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8002';
 
 // Interface para resposta da API
 interface RespostaApiEditais {
@@ -14,6 +17,18 @@ interface RespostaApiEditais {
 
 class ServicoApiEdital {
   private urlBase = '/api';
+
+  /**
+   * Retorna headers com autenticação
+   */
+  private getAuthHeaders(): HeadersInit {
+    const token = TokenService.getAccessToken();
+    return {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      ...(token && { 'Authorization': `Bearer ${token}` }),
+    };
+  }
 
   /**
    * Corrige problemas de encoding em todos os campos string de um edital
@@ -101,14 +116,16 @@ class ServicoApiEdital {
     }
   }
 
+  /**
+   * Criar novo edital
+   * ✅ ADAPTADO: Converte dados do frontend para o backend
+   */
   async criarEdital(dados: EditalCreateData): Promise<ApiResponse<Edital>> {
     try {
-      const resposta = await fetch(`${URL_BASE_API}/editais`, {
+      // ✅ Adaptar dados antes de enviar (se necessário)
+      const resposta = await fetch(`${API_BASE_URL}${API_ENDPOINTS.EDITAIS.CREATE}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
+        headers: this.getAuthHeaders(),
         body: JSON.stringify(dados)
       });
 
@@ -116,10 +133,14 @@ class ServicoApiEdital {
         throw new Error(`HTTP error! status: ${resposta.status}`);
       }
 
-      const novoEdital: Edital = await resposta.json();
+      const novoEdital = await resposta.json();
+      
+      // ✅ Adaptar resposta do backend
+      const editalAdaptado = adaptEditalFromBackend(novoEdital as Record<string, unknown>);
+      const editalLimpo = this.limparDadosEdital(editalAdaptado);
 
       return {
-        data: novoEdital,
+        data: editalLimpo,
         success: true,
         status: resposta.status,
         message: 'Edital criado com sucesso'
@@ -136,6 +157,10 @@ class ServicoApiEdital {
     }
   }
 
+  /**
+   * Listar editais com filtros
+   * ✅ ADAPTADO: Converte resposta do backend
+   */
   async listarEditais(filtros: EditalFilters = {}): Promise<ApiResponse<Edital[]>> {
     try {
       // Construir URL com parâmetros
@@ -161,15 +186,12 @@ class ServicoApiEdital {
         params.append('financiador', filtros.financiador);
       }
 
-      const url = `${URL_BASE_API}/editais`;
+      const url = `${API_BASE_URL}${API_ENDPOINTS.EDITAIS.LIST}`;
        console.log('🔗 Fazendo requisição para:', url);
 
       const resposta = await fetch(url, {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        }
+        headers: this.getAuthHeaders()
       });
 
       if (!resposta.ok) {
@@ -182,18 +204,19 @@ class ServicoApiEdital {
       // A API retorna diretamente um array de editais, não um objeto com propriedade editais
       const arrayEditais = Array.isArray(dados) ? dados : (dados.editais || []);
       
-      // Aplicar limpeza de encoding em todos os editais
-      const editaisLimpos = arrayEditais.map((edital: Edital) => this.limparDadosEdital(edital));
+      // ✅ Adaptar cada edital do backend
+      const editaisAdaptados = arrayEditais.map((edital: Record<string, unknown>) => {
+        const adaptado = adaptEditalFromBackend(edital);
+        return this.limparDadosEdital(adaptado);
+      });
       
-      console.log('🔧 Array de editais processado:', editaisLimpos.length, 'editais');
-      console.log('🔍 Exemplo do primeiro edital (original):', arrayEditais[0]);
-      console.log('✨ Exemplo do primeiro edital (limpo):', editaisLimpos[0]);
+      console.log('🔧 Array de editais processado:', editaisAdaptados.length, 'editais');
 
       return {
-        data: editaisLimpos,
+        data: editaisAdaptados,
         success: true,
         status: resposta.status,
-        message: `${editaisLimpos.length} editais carregados com sucesso`
+        message: `${editaisAdaptados.length} editais carregados com sucesso`
       };
     } catch (erro) {
       console.error('❌ Erro ao carregar editais da API:', erro);
@@ -229,15 +252,12 @@ class ServicoApiEdital {
   async obterEdital(id: number): Promise<ApiResponse<Edital>> {
     try {
       console.log(`🔍 Buscando edital por ID: ${id}`);
-      const url = `${URL_BASE_API}/editais/${id}`;
+      const url = `${API_BASE_URL}${API_ENDPOINTS.EDITAIS.DETAIL(id)}`;
       console.log(`🌐 URL da requisição: ${url}`);
       
       const resposta = await fetch(url, {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        }
+        headers: this.getAuthHeaders()
       });
       
       console.log(`📡 Status da resposta: ${resposta.status}`);
@@ -263,7 +283,7 @@ class ServicoApiEdital {
       
       // Corrigindo o link do PDF para usar o caminho correto
       if (editalLimpo && editalLimpo.id) {
-        editalLimpo.pdfLink = `${URL_BASE_API}/edital/${editalLimpo.id}`;
+        editalLimpo.pdfLink = `${API_BASE_URL}/api/v1/edital/${editalLimpo.id}`;
       }
       
       return {
@@ -286,12 +306,9 @@ class ServicoApiEdital {
 
   async obterEditalPorApelido(apelido: string): Promise<ApiResponse<Edital>> {
     try {
-      const resposta = await fetch(`${URL_BASE_API}/editais/apelido/${apelido}`, {
+      const resposta = await fetch(`${API_BASE_URL}/api/v1/editais/apelido/${apelido}`, {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        }
+        headers: this.getAuthHeaders()
       });
       
       if (!resposta.ok) {
@@ -325,12 +342,9 @@ class ServicoApiEdital {
 
   async atualizarEdital(id: number, dados: EditalUpdateData): Promise<ApiResponse<Edital>> {
     try {
-      const resposta = await fetch(`${URL_BASE_API}/editais/${id}`, {
+      const resposta = await fetch(`${API_BASE_URL}${API_ENDPOINTS.EDITAIS.UPDATE(id)}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
+        headers: this.getAuthHeaders(),
         body: JSON.stringify(dados)
       });
       
@@ -363,8 +377,12 @@ class ServicoApiEdital {
       const formData = new FormData();
       formData.append('pdf', arquivo);
       
-      const resposta = await fetch(`${URL_BASE_API}/editais/${id}/pdf`, {
+      const token = TokenService.getAccessToken();
+      const resposta = await fetch(`${API_BASE_URL}/api/v1/editais/${id}/pdf`, {
         method: 'PUT',
+        headers: {
+          ...(token && { 'Authorization': `Bearer ${token}` }),
+        },
         body: formData
       });
       
@@ -394,12 +412,9 @@ class ServicoApiEdital {
 
   async deletarEdital(id: number): Promise<ApiResponse<void>> {
     try {
-      const resposta = await fetch(`${URL_BASE_API}/editais/${id}`, {
+      const resposta = await fetch(`${API_BASE_URL}${API_ENDPOINTS.EDITAIS.DELETE(id)}`, {
         method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        }
+        headers: this.getAuthHeaders()
       });
       
       if (!resposta.ok) {

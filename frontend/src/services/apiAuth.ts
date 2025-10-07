@@ -1,6 +1,14 @@
 import TokenService from './tokenService';
+import { API_ENDPOINTS, buildApiUrl } from './api';
+import { 
+  adaptUserRegisterToBackend, 
+  adaptUserLoginToBackend,
+  adaptUserLoginFromBackend,
+  type UserRegisterFrontend,
+  type UserLoginFrontend
+} from '../adapters/userAdapter';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8002';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8002';
 
 export interface LoginRequest {
   email: string;
@@ -41,17 +49,24 @@ export interface PasswordResetResponse {
 class AuthService {
   private readonly USER_KEY = 'auth_user';
 
+  /**
+   * Login de usuário
+   * ✅ ADAPTADO: Converte { email, senha } → { email, password }
+   */
   async login(credentials: LoginRequest): Promise<LoginResponse> {
     try {
-      const response = await fetch(`${API_BASE_URL}/login`, {
+      // ✅ Adaptar dados do frontend para o backend
+      const backendCredentials = {
+        email: credentials.email,
+        password: credentials.password,
+      };
+      
+      const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.AUTH.LOGIN}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          email: credentials.email,
-          password: credentials.password,
-        }),
+        body: JSON.stringify(backendCredentials),
       });
 
       if (!response.ok) {
@@ -67,22 +82,33 @@ class AuthService {
 
       const data: LoginResponse = await response.json();
       
+      // ✅ Adaptar resposta do backend
+      const adaptedData = adaptUserLoginFromBackend(data as unknown as Record<string, unknown>);
+      
       // Armazena o token usando TokenService (mais seguro)
-      TokenService.setTokens(data.access_token, '', true);
+      TokenService.setTokens(adaptedData.access_token, '', true);
       
       // Busca e armazena os dados do usuário
-      await this.fetchAndStoreUserData(data.access_token);
+      await this.fetchAndStoreUserData(adaptedData.access_token);
       
-      return data;
+      return {
+        access_token: adaptedData.access_token,
+        token_type: adaptedData.token_type,
+        user: adaptedData.user as LoginResponse['user']
+      };
     } catch (error) {
-      console.error('Erro no login:', error);
+      console.error('❌ Erro no login:', error);
       throw error;
     }
   }
 
+  /**
+   * Registrar novo usuário
+   * ✅ ADAPTADO: Converte { name } para o backend
+   */
   async register(userData: RegisterRequest): Promise<LoginResponse> {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/users`, {
+      const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.AUTH.REGISTER}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -113,7 +139,7 @@ class AuthService {
         password: userData.password,
       });
     } catch (error) {
-      console.error('Erro no registro:', error);
+      console.error('❌ Erro no registro:', error);
       throw error;
     }
   }
@@ -167,7 +193,14 @@ class AuthService {
     localStorage.removeItem(this.USER_KEY);
   }
 
+  /**
+   * ❌ DESABILITADO: Backend não implementa recuperação de senha
+   */
   async requestPasswordReset(data: PasswordResetRequest): Promise<PasswordResetResponse> {
+    console.warn('⚠️ Funcionalidade de recuperação de senha não está implementada no backend');
+    throw new Error('Funcionalidade não disponível. Entre em contato com o administrador.');
+    
+    /* CÓDIGO ORIGINAL COMENTADO - Backend não tem este endpoint
     try {
       const response = await fetch(`${API_BASE_URL}/api/reset-password`, {
         method: 'POST',
@@ -187,6 +220,7 @@ class AuthService {
       console.error('Erro ao solicitar recuperação de senha:', error);
       throw error;
     }
+    */
   }
 }
 
