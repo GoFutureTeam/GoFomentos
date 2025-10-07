@@ -30,7 +30,7 @@ interface RespostaApi<T> {
   mensagem: string;
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8002';
 
 /**
  * Classe de serviço para gerenciar projetos na API
@@ -52,6 +52,11 @@ class ServicoApiProjeto {
       const response = await fetch(`${API_BASE_URL}/api/projects`, {
         headers: this.getHeaders(),
       });
+
+      if (response.status === 401) {
+        localStorage.removeItem('auth_token');
+        throw new Error('Sessão expirada. Por favor, faça login novamente.');
+      }
 
       if (!response.ok) {
         throw new Error('Erro ao listar projetos');
@@ -120,6 +125,11 @@ class ServicoApiProjeto {
         headers: this.getHeaders(),
         body: JSON.stringify(dadosProjeto),
       });
+
+      if (response.status === 401) {
+        localStorage.removeItem('auth_token');
+        throw new Error('Sessão expirada. Por favor, faça login novamente.');
+      }
 
       if (!response.ok) {
         const error = await response.json();

@@ -17,9 +17,9 @@ export const ProjetosSalvos: React.FC = () => {
 
   if (carregando) {
     return (
-      <div className="flex flex-col relative w-full items-center mt-[40px] pb-[40px] px-20 max-md:max-w-full max-md:px-5">
+      <div className="flex flex-col relative w-full items-center mt-[20px] pb-[20px] px-20 max-md:max-w-full max-md:px-5">
         <div className="relative z-10 w-[900px] max-w-full">
-          <div className="bg-white shadow-[0px_4px_6px_2px_rgba(0,0,0,0.25)] text-xl pb-[32px] rounded-[39px] max-md:max-w-full overflow-hidden">
+          <div className="bg-white shadow-[0px_4px_6px_2px_rgba(0,0,0,0.25)] text-xl pb-[20px] rounded-[39px] max-md:max-w-full overflow-hidden">
             <div className="w-full h-[23px] bg-[#DCF763] rounded-t-[39px]"></div>
             <div className="p-6">
               <p className="text-center text-gray-500">Carregando projetos...</p>
@@ -32,9 +32,9 @@ export const ProjetosSalvos: React.FC = () => {
 
   if (projetos.length === 0) {
     return (
-      <div className="flex flex-col relative w-full items-center mt-[40px] pb-[40px] px-20 max-md:max-w-full max-md:px-5">
+      <div className="flex flex-col relative w-full items-center mt-[20px] pb-[20px] px-20 max-md:max-w-full max-md:px-5">
         <div className="relative z-10 w-[900px] max-w-full">
-          <div className="bg-white shadow-[0px_4px_6px_2px_rgba(0,0,0,0.25)] text-xl pb-[32px] rounded-[39px] max-md:max-w-full overflow-hidden">
+          <div className="bg-white shadow-[0px_4px_6px_2px_rgba(0,0,0,0.25)] text-xl pb-[20px] rounded-[39px] max-md:max-w-full overflow-hidden">
             <div className="w-full h-[23px] bg-[#DCF763] rounded-t-[39px]"></div>
             <div className="flex flex-col mt-6 px-[40px] max-md:max-w-full max-md:px-5">
               <div className="text-center">
@@ -53,9 +53,9 @@ export const ProjetosSalvos: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col relative w-full items-center mt-[40px] pb-[40px] px-20 max-md:max-w-full max-md:px-5">
+    <div className="flex flex-col relative w-full items-center mt-[20px] pb-[20px] px-20 max-md:max-w-full max-md:px-5">
       <div className="relative z-10 w-[900px] max-w-full">
-        <div className="bg-white shadow-[0px_4px_6px_2px_rgba(0,0,0,0.25)] text-xl pb-[32px] rounded-[39px] max-md:max-w-full overflow-hidden">
+        <div className="bg-white shadow-[0px_4px_6px_2px_rgba(0,0,0,0.25)] text-xl pb-[20px] rounded-[39px] max-md:max-w-full overflow-hidden">
           <div className="w-full h-[23px] bg-[#DCF763] rounded-t-[39px]"></div>
           
           <div className="flex flex-col mt-6 px-[40px] max-md:max-w-full max-md:px-5">
@@ -76,14 +76,14 @@ export const ProjetosSalvos: React.FC = () => {
                   onClick={() => handleSelecionarProjeto(projeto.id!)}
                 >
                   <h4 className="font-bold text-lg text-[rgba(67,80,88,1)] mb-2 line-clamp-2">
-                    {projeto.nomeProjeto}
+                    {projeto.titulo_projeto}
                   </h4>
                   <p className="text-sm text-[rgba(67,80,88,1)] mb-3 line-clamp-3">
-                    {projeto.descricao}
+                    {projeto.resumo_atividades}
                   </p>
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-[rgba(67,80,88,1)] font-medium">
-                      {projeto.areaProjeto || 'Geral'}
+                      {projeto.nome_empresa}
                     </span>
                     <Button
                       size="sm"

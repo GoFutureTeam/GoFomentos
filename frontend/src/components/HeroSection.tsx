@@ -1,13 +1,15 @@
 import React from "react";
+// Importando as imagens diretamente
+import backgroundImage1 from '@/assets/uploads/Pattern 1.2 (1).svg';
+import backgroundImage2 from '@/assets/uploads/8a170130-d07b-497a-9e68-ec6bb3ce56bb.png';
 const HeroSection: React.FC = () => {
   return (
     <section className="bg-[rgba(67,80,88,1)]">
       <div
         style={{
-          backgroundImage:
-            "url(/lovable-uploads/fc8e9f15-312d-4438-9834-cd7b3554cb1d.png)",
-          backgroundSize: "auto 100%",
-          backgroundPosition: "right center",
+          backgroundImage: `url(${backgroundImage1})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
           backgroundRepeat: "no-repeat",
         }}
         className="px-5 py-12 lg:py-16 relative lg:px-20"
@@ -29,13 +31,12 @@ const HeroSection: React.FC = () => {
 
       <div
         style={{
-          backgroundImage:
-            "url(/lovable-uploads/8a170130-d07b-497a-9e68-ec6bb3ce56bb.png)",
+          backgroundImage: `url(${backgroundImage2})`,
           backgroundSize: "cover",
           backgroundPosition: "center",
           backgroundRepeat: "no-repeat",
         }}
-        className="relative bg-[rgba(220,247,99,0.65)] z-10 flex w-full flex-col items-center py-12 sm:py-16 px-5 lg:px-20 lg:py-[20px]"
+        className="relative bg-white z-10 flex w-full flex-col items-center py-12 sm:py-16 px-5 lg:px-20 lg:py-[20px]"
       >
         <div className="flex w-full max-w-[1279px] flex-row justify-between items-start gap-8 px-5 lg:px-[10px]">
           <h2 className="font-archivo font-extrabold text-2xl sm:text-3xl lg:w-auto lg:max-w-[400px] lg:shrink-0 text-[#435058] mx-0 my-0 text-left px-0 py-[20px]">

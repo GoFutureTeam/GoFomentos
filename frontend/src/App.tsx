@@ -34,6 +34,7 @@ const App = () => {
                     <Route path="/login" element={<Login />} />
                     <Route path="/registro" element={<Registro />} />
                     <Route path="/esqueci-senha" element={<EsqueciSenha />} />
+                    <Route path="/recuperar-senha" element={<EsqueciSenha />} />
                     
                     {/* Rotas Protegidas (requerem autenticação) */}
                     <Route element={<RotaProtegida />}>

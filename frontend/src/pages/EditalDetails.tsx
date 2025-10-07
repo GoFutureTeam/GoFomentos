@@ -7,6 +7,7 @@ import ChatInterface from '../components/details/ChatInterface';
 import Footer from '../components/details/Footer';
 import { useEditalPortugues } from '../hooks/useEditaisPortugues';
 import { Skeleton } from '../components/ui/skeleton';
+import { uploads } from '../assets/uploads';
 const EditalDetails = () => {
   const {
     id
@@ -101,12 +102,7 @@ const EditalDetails = () => {
   return <div className="overflow-hidden">
       <CommonHeader title={edital.apelido_edital} description="" showSecondSection={false} />
       
-      <div style={{
-        backgroundImage: 'url(/lovable-uploads/8a170130-d07b-497a-9e68-ec6bb3ce56bb.png)',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat'
-      }} className="relative bg-[rgba(220,247,99,0.65)] z-10 flex w-full flex-col items-center py-12 sm:py-16 px-5 lg:px-20 lg:py-[20px]" />
+
       
       <main>
         <div className="bg-white px-5 lg:px-20 py-12">

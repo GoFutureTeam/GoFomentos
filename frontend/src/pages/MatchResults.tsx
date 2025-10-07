@@ -6,6 +6,7 @@ import { ContactSection } from '@/components/match/ContactSection';
 import Footer from '@/components/details/Footer';
 import CommonHeader from '@/components/CommonHeader';
 import { MatchResult } from '@/hooks/useMatching';
+import { uploads } from '@/assets/uploads';
 const MatchResults: React.FC = () => {
   const location = useLocation();
 
@@ -58,12 +59,7 @@ const MatchResults: React.FC = () => {
         showSecondSection={false}
       />
       
-      <div style={{
-        backgroundImage: 'url(/lovable-uploads/8a170130-d07b-497a-9e68-ec6bb3ce56bb.png)',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat'
-      }} className="relative bg-[rgba(220,247,99,0.65)] z-10 flex w-full flex-col items-center py-12 sm:py-16 px-5 lg:px-20 lg:py-[20px]" />
+
       
       <main className="bg-white flex flex-col items-stretch max-md:max-w-full">
         <header className="text-center pt-[63px]">
@@ -76,10 +72,10 @@ const MatchResults: React.FC = () => {
         </header>
 
       {/* Editais Section */}
-      <section className="flex flex-col relative w-full items-center mt-[63px] pt-px pb-[45px] px-20 max-md:max-w-full max-md:mt-10 max-md:px-5 py-0">
+      <section className="flex flex-col relative w-full items-center mt-[63px] pt-px pb-[45px] px-5 sm:px-10 lg:px-20 max-md:mt-10 py-0">
         
-        <div className="relative w-[994px] max-w-full space-y-[60px]">
-          {matches.map((match, index) => <MatchedEditalCard key={`match-${index}-${match.titulo_edital || match.titulo || index}`} id={parseInt(match.id_edital) || match.id || index} title={match.titulo_edital || match.titulo || 'Título não informado'} organization={match.orgao_responsavel || match.empresa || 'Organização não informada'} description={match.motivo || match.descricao_resumida || match.descricao || 'Descrição não informada'} openingDate={match.data_inicial_submissao || match.data_inicio_submissao || 'Data não disponível'} closingDate={match.data_final_submissao || match.data_fim_submissao || 'Data não disponível'} compatibilityScore={match.score || match.compatibilityScore || 0} headerImage={`/lovable-uploads/${index % 2 === 0 ? '8a170130-d07b-497a-9e68-ec6bb3ce56bb.png' : 'fc8e9f15-312d-4438-9834-cd7b3554cb1d.png'}`} externalLink={match.link} />)}
+        <div className="relative w-full max-w-[994px] space-y-[40px] md:space-y-[60px]">
+          {matches.map((match, index) => <MatchedEditalCard key={`match-${index}-${match.titulo_edital || match.titulo || index}`} id={parseInt(match.id_edital) || match.id || index} title={match.titulo_edital || match.titulo || 'Título não informado'} organization={match.orgao_responsavel || match.empresa || 'Organização não informada'} description={match.motivo || match.descricao_resumida || match.descricao || 'Descrição não informada'} openingDate={match.data_inicial_submissao || match.data_inicio_submissao || 'Data não disponível'} closingDate={match.data_final_submissao || match.data_fim_submissao || 'Data não disponível'} compatibilityScore={match.score || match.compatibilityScore || 0} headerImage={index % 2 === 0 ? uploads['8a170130-d07b-497a-9e68-ec6bb3ce56bb.png'] : uploads['fc8e9f15-312d-4438-9834-cd7b3554cb1d.png']} externalLink={match.link} />)}
           
           <MonitoringSignup projectData={projectData} />
         </div>

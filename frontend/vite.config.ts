@@ -8,6 +8,10 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
+    // PROXY DESABILITADO - Usando backend local (Docker) na porta 8002
+    // O proxy estava interceptando as chamadas /api e redirecionando para servidor externo
+    // Para usar API externa novamente, descomente o bloco abaixo
+    /*
     proxy: {
       '/api': {
         target: 'https://api-editais.gofuture.cc',
@@ -21,9 +25,12 @@ export default defineConfig(({ mode }) => ({
         secure: true,
       }
     }
+    */
   },
   preview: {
     port: 8080,
+    // PROXY DESABILITADO - Usando backend local
+    /*
     proxy: {
       '/api': {
         target: 'https://api-editais.gofuture.cc',
@@ -37,6 +44,7 @@ export default defineConfig(({ mode }) => ({
         secure: true,
       }
     }
+    */
   },
   plugins: [
     react(),
