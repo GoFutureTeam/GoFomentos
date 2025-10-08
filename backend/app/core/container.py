@@ -15,6 +15,10 @@ from ..infrastructure.security.jwt_service import JWTService
 # Application Services
 from ..application.services.cnpq_scraper_service import CNPqScraperService
 from ..application.services.fapesq_scraper_service import FapesqScraperService
+from ..application.services.paraiba_gov_scraper_service import ParaibaGovScraperService
+from ..application.services.confap_scraper_service import ConfapScraperService
+from ..application.services.capes_scraper_service import CapesScraperService
+from ..application.services.finep_scraper_service import FinepScraperService
 from ..application.services.openai_extractor_service import OpenAIExtractorService
 from ..application.services.job_scheduler_service import JobSchedulerService
 from ..application.services.chromadb_service import ChromaDBService
@@ -143,6 +147,26 @@ class Container(containers.DeclarativeContainer):
         max_workers=settings.JOB_MAX_WORKERS
     )
 
+    paraiba_gov_scraper_service = providers.Factory(
+        ParaibaGovScraperService,
+        max_workers=settings.JOB_MAX_WORKERS
+    )
+
+    confap_scraper_service = providers.Factory(
+        ConfapScraperService,
+        max_workers=settings.JOB_MAX_WORKERS
+    )
+
+    capes_scraper_service = providers.Factory(
+        CapesScraperService,
+        max_workers=settings.JOB_MAX_WORKERS
+    )
+
+    finep_scraper_service = providers.Factory(
+        FinepScraperService,
+        max_workers=settings.JOB_MAX_WORKERS
+    )
+
     openai_extractor_service = providers.Factory(
         OpenAIExtractorService,
         openai_api_key=config.OPENAI_API_KEY,
@@ -157,6 +181,10 @@ class Container(containers.DeclarativeContainer):
         edital_repository=edital_repository,
         cnpq_scraper_service=cnpq_scraper_service,
         fapesq_scraper_service=fapesq_scraper_service,
+        paraiba_gov_scraper_service=paraiba_gov_scraper_service,
+        confap_scraper_service=confap_scraper_service,
+        capes_scraper_service=capes_scraper_service,
+        finep_scraper_service=finep_scraper_service,
         openai_service=openai_extractor_service,
         pdf_processing_delay_ms=settings.JOB_PDF_PROCESSING_DELAY_MS
     )
