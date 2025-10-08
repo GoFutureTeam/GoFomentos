@@ -8,13 +8,14 @@ import Footer from '../components/details/Footer';
 import { useEditalPortugues } from '../hooks/useEditaisPortugues';
 import { Skeleton } from '../components/ui/skeleton';
 import { uploads } from '../assets/uploads';
+
 const EditalDetails = () => {
   const {
     id
   } = useParams<{ id: string }>();
-  const editalId = id ? parseInt(id) : undefined;
+  const editalUuid = id; // URL param 'id' now contains UUID string
   
-  console.log(`🎬 EditalDetails: Componente iniciado com ID: ${id} (parsed: ${editalId})`);
+  console.log(`🎬 EditalDetails: Componente iniciado com UUID: ${editalUuid}`);
   
   const {
     edital,
@@ -23,15 +24,79 @@ const EditalDetails = () => {
     baixarPdf: downloadPdf,
     pdfDisponivel: pdfAvailable,
     verificandoPdf: pdfChecking
-  } = useEditalPortugues(editalId);
+  } = useEditalPortugues(editalUuid);
   
   console.log(`📋 EditalDetails: Estado atual:`, {
-    editalId,
+    editalUuid,
     loading,
     error,
     hasEdital: !!edital,
     editalData: edital
   });
+
+  /**
+   * ✅ Helper para verificar se um valor deve ser exibido
+   */
+  const temValor = (valor: unknown): boolean => {
+    if (valor === null || valor === undefined) return false;
+    if (typeof valor === 'string' && valor.trim() === '') return false;
+    if (typeof valor === 'number' && isNaN(valor)) return false;
+    return true;
+  };
+
+  /**
+   * ✅ Helper para formatar valor ou retornar null
+   */
+  const formatarValor = (valor: unknown, formatador?: (v: unknown) => string): string | null => {
+    if (!temValor(valor)) return null;
+    return formatador ? formatador(valor) : String(valor);
+  };
+
+  /**
+   * ✅ Helper para formatar moeda
+   */
+  const formatarMoeda = (valor: number | null | undefined): string | null => {
+    if (!temValor(valor)) return null;
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(valor!);
+  };
+
+  /**
+   * ✅ Helper para formatar percentual
+   */
+  const formatarPercentual = (valor: number | null | undefined): string | null => {
+    if (!temValor(valor)) return null;
+    return `${valor}%`;
+  };
+
+  /**
+   * ✅ Helper para formatar booleano
+   */
+  const formatarBooleano = (valor: boolean | null | undefined): string | null => {
+    if (valor === null || valor === undefined) return null;
+    return valor ? 'Sim' : 'Não';
+  };
+
+  /**
+   * ✅ Componente para linha de informação condicional
+   */
+  const InfoRow = ({ 
+    label, 
+    value 
+  }: { 
+    label: string; 
+    value: string | null 
+  }) => {
+    if (!value) return null;
+    
+    return (
+      <p className="text-gray-700 leading-relaxed text-base">
+        <strong>{label}:</strong> {value}
+      </p>
+    );
+  };
   
   if (loading) {
     console.log(`⏳ EditalDetails: Renderizando loading state`);
@@ -72,7 +137,7 @@ const EditalDetails = () => {
 
   // Função para formatar data no padrão brasileiro
   const formatDate = (dateString: string | undefined) => {
-    if (!dateString) return 'Data não informada';
+    if (!dateString) return null;
     const date = new Date(dateString);
     return date.toLocaleDateString('pt-BR');
   };
@@ -86,8 +151,7 @@ const EditalDetails = () => {
   const objectives = edital.descricao_completa ? extractObjectives(edital.descricao_completa) : [];
 
   console.log(`🎯 EditalDetails: Edital carregado com sucesso:`, {
-    id: edital.id,
-    titulo: edital.titulo,
+    uuid: edital.uuid,
     apelido_edital: edital.apelido_edital,
     descricao_completa_length: edital.descricao_completa?.length || 0,
     objectives_found: objectives.length,
@@ -96,7 +160,7 @@ const EditalDetails = () => {
 
   // Função para download do edital
   const handleDownloadEdital = () => {
-    const downloadUrl = `https://api-editais.gofuture.cc/api/v1/editais/${edital.id}/download`;
+    const downloadUrl = `https://api-editais.gofuture.cc/api/v1/editais/${edital.uuid}/download`;
     window.open(downloadUrl, '_blank');
   };
   return <div className="overflow-hidden">
@@ -112,38 +176,34 @@ const EditalDetails = () => {
               <div className="w-full xl:w-[60%] space-y-10">
                 
                 {/* Seção Objetivo do Edital */}
-                {edital.descricao_completa && (
+                {temValor(edital.descricao_completa) && (
                   <section>
                     <h2 className="text-xl font-semibold mb-4 text-gray-800">Objetivo do Edital</h2>
                     <p className="text-gray-700 leading-relaxed text-base mb-4">
                       {edital.descricao_completa}
                     </p>
-                    <p className="text-gray-700 leading-relaxed text-base mb-4">
-                      Esta chamada representa uma excelente oportunidade para propostas inovadoras que se alinhem com esta visão estratégica. O edital busca fomentar o desenvolvimento de projetos que contribuam significativamente para o avanço do setor, promovendo não apenas a inovação tecnológica, mas também o desenvolvimento sustentável e o impacto social positivo.
-                    </p>
-                    <p className="text-gray-700 leading-relaxed text-base">
-                      As propostas selecionadas receberão não apenas apoio financeiro, mas também orientação técnica especializada e acesso a uma rede de parceiros estratégicos, criando um ecossistema favorável ao sucesso dos projetos aprovados.
-                    </p>
                   </section>
                 )}
 
                 {/* Seção Financiadores */}
-                {(edital.financiador_1 || edital.financiador_2) && (
+                {(temValor(edital.financiador_1) || temValor(edital.financiador_2)) && (
                   <section>
                     <h2 className="text-xl font-semibold mb-4 text-gray-800">Financiadores</h2>
                     <div className="text-gray-700 leading-relaxed text-base space-y-2">
-                      {edital.financiador_1 && (
-                        <p><strong>Financiador Principal:</strong> {edital.financiador_1}</p>
-                      )}
-                      {edital.financiador_2 && (
-                        <p><strong>Financiador Secundário:</strong> {edital.financiador_2}</p>
-                      )}
+                      <InfoRow 
+                        label="Financiador Principal" 
+                        value={formatarValor(edital.financiador_1)} 
+                      />
+                      <InfoRow 
+                        label="Financiador Secundário" 
+                        value={formatarValor(edital.financiador_2)} 
+                      />
                     </div>
                   </section>
                 )}
 
                 {/* Seção Áreas de Foco */}
-                {edital.area_foco && (
+                {temValor(edital.area_foco) && (
                   <section>
                     <h2 className="text-xl font-semibold mb-4 text-gray-800">Áreas de Foco</h2>
                     <div className="text-gray-700 leading-relaxed text-base">
@@ -157,17 +217,20 @@ const EditalDetails = () => {
                 )}
 
                 {/* Seção Tipo de Recurso */}
-                {edital.tipo_recurso && (
+                {temValor(edital.tipo_recurso) && (
                   <section>
                     <h2 className="text-xl font-semibold mb-4 text-gray-800">Tipo de Recurso</h2>
                     <div className="text-gray-700 leading-relaxed text-base">
-                      <p><strong>Modalidade de apoio:</strong> {edital.tipo_recurso}</p>
+                      <InfoRow 
+                        label="Modalidade de apoio" 
+                        value={formatarValor(edital.tipo_recurso)} 
+                      />
                     </div>
                   </section>
                 )}
 
                 {/* Seção Categoria */}
-                {edital.categoria && (
+                {temValor(edital.categoria) && (
                   <section>
                     <h2 className="text-xl font-semibold mb-4 text-gray-800">Categoria</h2>
                     <div className="text-gray-700 leading-relaxed text-base">
@@ -177,83 +240,82 @@ const EditalDetails = () => {
                 )}
 
                 {/* Seção Informações Financeiras */}
-                {(edital.valor_min !== undefined || edital.valor_max !== undefined || edital.duracao_min_meses || edital.duracao_max_meses) && (
+                {(temValor(edital.valor_min_R) || temValor(edital.valor_max_R) || temValor(edital.duracao_min_meses) || temValor(edital.duracao_max_meses) || temValor(edital.recepcao_recursos) || temValor(edital.custeio) || temValor(edital.capital)) && (
                   <section>
                     <h2 className="text-xl font-semibold mb-4 text-gray-800">Informações Financeiras e Prazos</h2>
                     <div className="text-gray-700 leading-relaxed text-base space-y-2">
-                      {(edital.valor_min !== undefined || edital.valor_max !== undefined) && (
-                        <p>
-                          <strong>Valores:</strong> 
-                          {edital.valor_min !== undefined && edital.valor_max !== undefined ? (
-                            ` De R$ ${edital.valor_min.toLocaleString('pt-BR')} até R$ ${edital.valor_max.toLocaleString('pt-BR')}`
-                          ) : edital.valor_max !== undefined ? (
-                            ` Até R$ ${edital.valor_max.toLocaleString('pt-BR')}`
-                          ) : (
-                            ` A partir de R$ ${edital.valor_min!.toLocaleString('pt-BR')}`
-                          )}
-                        </p>
-                      )}
-                      {(edital.duracao_min_meses || edital.duracao_max_meses) && (
-                        <p>
-                          <strong>Duração do projeto:</strong>
-                          {edital.duracao_min_meses && edital.duracao_max_meses ? (
-                            ` De ${edital.duracao_min_meses} a ${edital.duracao_max_meses} meses`
-                          ) : edital.duracao_max_meses ? (
-                            ` Até ${edital.duracao_max_meses} meses`
-                          ) : (
-                            ` Mínimo de ${edital.duracao_min_meses} meses`
-                          )}
-                        </p>
-                      )}
-                      {edital.recepcao_recursos && (
-                        <p><strong>Recepção de recursos:</strong> {edital.recepcao_recursos}</p>
-                      )}
-                      {edital.permite_custeio !== undefined && (
-                        <p><strong>Permite custeio:</strong> {edital.permite_custeio ? 'Sim' : 'Não'}</p>
-                      )}
-                      {edital.permite_capital !== undefined && (
-                        <p><strong>Permite capital:</strong> {edital.permite_capital ? 'Sim' : 'Não'}</p>
-                      )}
+                      <InfoRow 
+                        label="Valor Mínimo" 
+                        value={formatarMoeda(edital.valor_min_R)} 
+                      />
+                      <InfoRow 
+                        label="Valor Máximo" 
+                        value={formatarMoeda(edital.valor_max_R)} 
+                      />
+                      <InfoRow 
+                        label="Duração Mínima" 
+                        value={formatarValor(edital.duracao_min_meses, (d) => `${d} meses`)} 
+                      />
+                      <InfoRow 
+                        label="Duração Máxima" 
+                        value={formatarValor(edital.duracao_max_meses, (d) => `${d} meses`)} 
+                      />
+                      <InfoRow 
+                        label="Recepção de recursos" 
+                        value={formatarValor(edital.recepcao_recursos)} 
+                      />
+                      <InfoRow 
+                        label="Permite custeio" 
+                        value={formatarBooleano(edital.custeio)} 
+                      />
+                      <InfoRow 
+                        label="Permite capital" 
+                        value={formatarBooleano(edital.capital)} 
+                      />
                     </div>
                   </section>
                 )}
 
                 {/* Seção Contrapartida */}
-                {(edital.tipo_contrapartida || edital.contrapartida_min_percent !== undefined || edital.contrapartida_max_percent !== undefined) && (
+                {(temValor(edital.tipo_contrapartida) || temValor(edital.contrapartida_min_pct) || temValor(edital.contrapartida_max_pct)) && (
                   <section>
                     <h2 className="text-xl font-semibold mb-4 text-gray-800">Contrapartida</h2>
                     <div className="text-gray-700 leading-relaxed text-base space-y-2">
-                      {edital.tipo_contrapartida && (
-                        <p><strong>Tipo:</strong> {edital.tipo_contrapartida}</p>
-                      )}
-                      {(edital.contrapartida_min_percent !== undefined || edital.contrapartida_max_percent !== undefined) && (
-                        <p>
-                          <strong>Percentual:</strong>
-                          {edital.contrapartida_min_percent !== undefined && edital.contrapartida_max_percent !== undefined ? (
-                            ` De ${edital.contrapartida_min_percent}% a ${edital.contrapartida_max_percent}%`
-                          ) : edital.contrapartida_max_percent !== undefined ? (
-                            ` Até ${edital.contrapartida_max_percent}%`
-                          ) : (
-                            ` Mínimo de ${edital.contrapartida_min_percent}%`
-                          )}
-                        </p>
-                      )}
+                      <InfoRow 
+                        label="Tipo" 
+                        value={formatarValor(edital.tipo_contrapartida)} 
+                      />
+                      <InfoRow 
+                        label="Percentual Mínimo" 
+                        value={formatarPercentual(edital.contrapartida_min_pct)} 
+                      />
+                      <InfoRow 
+                        label="Percentual Máximo" 
+                        value={formatarPercentual(edital.contrapartida_max_pct)} 
+                      />
                     </div>
                   </section>
                 )}
 
-                {/* Seção Tipo de Proponente */}
-                {edital.tipo_proponente && (
+                {/* Seção Tipo de Proponente e Empresas */}
+                {(temValor(edital.tipo_proponente) || temValor(edital.empresas_que_podem_submeter)) && (
                   <section>
-                    <h2 className="text-xl font-semibold mb-4 text-gray-800">Tipo de Proponente</h2>
-                    <div className="text-gray-700 leading-relaxed text-base">
-                      <p>{edital.tipo_proponente}</p>
+                    <h2 className="text-xl font-semibold mb-4 text-gray-800">Elegibilidade</h2>
+                    <div className="text-gray-700 leading-relaxed text-base space-y-2">
+                      <InfoRow 
+                        label="Tipo de Proponente" 
+                        value={formatarValor(edital.tipo_proponente)} 
+                      />
+                      <InfoRow 
+                        label="Empresas que podem submeter" 
+                        value={formatarValor(edital.empresas_que_podem_submeter)} 
+                      />
                     </div>
                   </section>
                 )}
 
                 {/* Seção O que este edital oferece? */}
-                {edital.observacoes && (
+                {temValor(edital.observacoes) && (
                   <section>
                     <h2 className="text-xl font-semibold mb-4 text-gray-800">O que este edital oferece?</h2>
                     <div className="text-gray-700 leading-relaxed text-base">
@@ -263,13 +325,13 @@ const EditalDetails = () => {
                 )}
 
                 {/* Seção Quem pode participar e como? */}
-                {edital.empresas_elegiveis && (
+                {temValor(edital.empresas_elegiveis) && (
                   <section>
                     <h2 className="text-xl font-semibold mb-4 text-gray-800">Quem pode participar?</h2>
                     <div className="text-gray-700 leading-relaxed text-base mb-4">
                       <p>{edital.empresas_elegiveis}</p>
                     </div>
-                    {edital.link && (
+                    {temValor(edital.link) && (
                       <div className="text-gray-700 leading-relaxed text-base">
                         <p>
                           Para mais informações e submissão de propostas, acesse:{' '}
@@ -283,30 +345,22 @@ const EditalDetails = () => {
                 )}
 
                 {/* Seção Cronograma Completo */}
-                {(edital.data_inicio_submissao || edital.data_fim_submissao) && (
+                {(temValor(edital.data_inicial_submissao) || temValor(edital.data_final_submissao) || temValor(edital.data_resultado)) && (
                   <section>
                     <h2 className="text-xl font-semibold mb-4 text-gray-800">Cronograma Completo</h2>
-                    <p className="text-gray-700 leading-relaxed text-base">
-                      Fique atento ao cronograma: 
-                      {edital.data_inicio_submissao && edital.data_fim_submissao && (
-                        <>o período para submissão de propostas se inicia em <strong>{formatDate(edital.data_inicio_submissao)}</strong> e vai até a data final de <strong>{formatDate(edital.data_fim_submissao)}</strong>.</>
-                      )}
-                      {!edital.data_inicio_submissao && edital.data_fim_submissao && (
-                        <>o prazo final para submissão das propostas é <strong>{formatDate(edital.data_fim_submissao)}</strong>.</>
-                      )}
-                      {edital.data_resultado && (
-                        <> A divulgação dos resultados está prevista para <strong>{formatDate(edital.data_resultado)}</strong>.</>
-                      )}
-                    </p>
-                  </section>
-                )}
-
-                {/* Seção Tipo de Contrapartida */}
-                {edital.tipo_contrapartida && (
-                  <section>
-                    <h2 className="text-xl font-semibold mb-4 text-gray-800">Tipo de Contrapartida</h2>
-                    <div className="text-gray-700 leading-relaxed text-base">
-                      <p>{edital.tipo_contrapartida}</p>
+                    <div className="text-gray-700 leading-relaxed text-base space-y-2">
+                      <InfoRow 
+                        label="Início das Submissões" 
+                        value={formatDate(edital.data_inicial_submissao)} 
+                      />
+                      <InfoRow 
+                        label="Fim das Submissões" 
+                        value={formatDate(edital.data_final_submissao)} 
+                      />
+                      <InfoRow 
+                        label="Divulgação do Resultado" 
+                        value={formatDate(edital.data_resultado)} 
+                      />
                     </div>
                   </section>
                 )}
@@ -316,7 +370,7 @@ const EditalDetails = () => {
               <div className="w-full xl:w-[40%] space-y-8">
                 <SidebarCard 
                   edital={edital} 
-                  onDownload={() => downloadPdf(edital.id, edital.arquivo_nome || `edital-${edital.id}.pdf`)} 
+                  onDownload={() => downloadPdf(edital.uuid, edital.arquivo_nome || `edital-${edital.uuid}.pdf`)} 
                   downloadEnabled={pdfAvailable !== false} // Habilita se não verificamos ainda ou se disponível
                   pdfChecking={pdfChecking}
                 />

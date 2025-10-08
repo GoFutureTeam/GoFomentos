@@ -54,13 +54,13 @@ const EditalGrid: React.FC<EditalGridProps> = ({
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
         {currentEditais.map((edital) => (
           <EditalCard
-            key={edital.id}
-            id={edital.id}
-            area={edital.area_foco || edital.categoria || 'Área não informada'}
-            nome={edital.apelido_edital || edital.titulo || 'Título não informado'}
-            tipoProponente={edital.tipo_proponente || 'Não informado'}
-            origem={edital.origem || 'Não informado'}
-            dataFinalSubmissao={formatDate(edital.data_fim_submissao || '')}
+            key={edital.uuid}
+            id={edital.uuid}
+            area={edital.area_foco || edital.categoria}
+            nome={edital.apelido_edital || edital.titulo}
+            tipoProponente={edital.tipo_proponente}
+            origem={edital.origem}
+            dataFinalSubmissao={formatDate(edital.data_final_submissao || '')}
             objetivoEdital={edital.descricao_completa}
           />
         ))}

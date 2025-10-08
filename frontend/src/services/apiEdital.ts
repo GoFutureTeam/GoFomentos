@@ -1,8 +1,11 @@
 import { Edital, EditalCreateData, EditalFilters, EditalEnums, ApiResponse, EditalUpdateData } from '../types/edital';
 import { fixEncoding } from '../lib/utils';
+import { API_ENDPOINTS, buildApiUrl } from './api';
+import { adaptEditalFromBackend, adaptEditalToBackend } from '../adapters/editalAdapter';
+import TokenService from './tokenService';
 
 // Configuração da API
-const URL_BASE_API = 'http://localhost:8002/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8002';
 
 // Interface para resposta da API
 interface RespostaApiEditais {
@@ -14,6 +17,18 @@ interface RespostaApiEditais {
 
 class ServicoApiEdital {
   private urlBase = '/api';
+
+  /**
+   * Retorna headers com autenticação
+   */
+  private getAuthHeaders(): HeadersInit {
+    const token = TokenService.getAccessToken();
+    return {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      ...(token && { 'Authorization': `Bearer ${token}` }),
+    };
+  }
 
   /**
    * Corrige problemas de encoding em todos os campos string de um edital
@@ -101,14 +116,16 @@ class ServicoApiEdital {
     }
   }
 
+  /**
+   * Criar novo edital
+   * ✅ ADAPTADO: Converte dados do frontend para o backend
+   */
   async criarEdital(dados: EditalCreateData): Promise<ApiResponse<Edital>> {
     try {
-      const resposta = await fetch(`${URL_BASE_API}/editais`, {
+      // ✅ Adaptar dados antes de enviar (se necessário)
+      const resposta = await fetch(`${API_BASE_URL}${API_ENDPOINTS.EDITAIS.CREATE}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
+        headers: this.getAuthHeaders(),
         body: JSON.stringify(dados)
       });
 
@@ -116,10 +133,14 @@ class ServicoApiEdital {
         throw new Error(`HTTP error! status: ${resposta.status}`);
       }
 
-      const novoEdital: Edital = await resposta.json();
+      const novoEdital = await resposta.json();
+      
+      // ✅ Adaptar resposta do backend
+      const editalAdaptado = adaptEditalFromBackend(novoEdital as Record<string, unknown>);
+      const editalLimpo = this.limparDadosEdital(editalAdaptado);
 
       return {
-        data: novoEdital,
+        data: editalLimpo,
         success: true,
         status: resposta.status,
         message: 'Edital criado com sucesso'
@@ -136,6 +157,10 @@ class ServicoApiEdital {
     }
   }
 
+  /**
+   * Listar editais com filtros
+   * ✅ ADAPTADO: Converte resposta do backend
+   */
   async listarEditais(filtros: EditalFilters = {}): Promise<ApiResponse<Edital[]>> {
     try {
       // Construir URL com parâmetros
@@ -161,15 +186,12 @@ class ServicoApiEdital {
         params.append('financiador', filtros.financiador);
       }
 
-      const url = `${URL_BASE_API}/editais`;
-       console.log('🔗 Fazendo requisição para:', url);
+      const url = `${API_BASE_URL}${API_ENDPOINTS.EDITAIS.LIST}`;
+      console.log('🔗 Fazendo requisição para:', url);
 
       const resposta = await fetch(url, {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        }
+        headers: this.getAuthHeaders()
       });
 
       if (!resposta.ok) {
@@ -179,21 +201,61 @@ class ServicoApiEdital {
       const dados = await resposta.json();
       console.log('📊 Dados brutos recebidos da API:', dados);
       
-      // A API retorna diretamente um array de editais, não um objeto com propriedade editais
+      // A API retorna diretamente um array de editais
       const arrayEditais = Array.isArray(dados) ? dados : (dados.editais || []);
       
-      // Aplicar limpeza de encoding em todos os editais
-      const editaisLimpos = arrayEditais.map((edital: Edital) => this.limparDadosEdital(edital));
+      // 🔍 LOG: Mostrar estrutura do primeiro edital recebido do backend
+      if (arrayEditais.length > 0) {
+        console.log('📋 Estrutura do primeiro edital recebido do BACKEND:', {
+          uuid: arrayEditais[0].uuid,
+          apelido_edital: arrayEditais[0].apelido_edital,
+          link: arrayEditais[0].link,
+          financiador_1: arrayEditais[0].financiador_1,
+          financiador_2: arrayEditais[0].financiador_2,
+          area_foco: arrayEditais[0].area_foco,
+          tipo_proponente: arrayEditais[0].tipo_proponente,
+          empresas_que_podem_submeter: arrayEditais[0].empresas_que_podem_submeter,
+          duracao_min_meses: arrayEditais[0].duracao_min_meses,
+          duracao_max_meses: arrayEditais[0].duracao_max_meses,
+          valor_min_R: arrayEditais[0].valor_min_R,
+          valor_max_R: arrayEditais[0].valor_max_R,
+          tipo_recurso: arrayEditais[0].tipo_recurso,
+          recepcao_recursos: arrayEditais[0].recepcao_recursos,
+          custeio: arrayEditais[0].custeio,
+          capital: arrayEditais[0].capital,
+          contrapartida_min_pct: arrayEditais[0].contrapartida_min_pct,
+          contrapartida_max_pct: arrayEditais[0].contrapartida_max_pct,
+          tipo_contrapartida: arrayEditais[0].tipo_contrapartida,
+          data_inicial_submissao: arrayEditais[0].data_inicial_submissao,
+          data_final_submissao: arrayEditais[0].data_final_submissao,
+          data_resultado: arrayEditais[0].data_resultado,
+          descricao_completa: arrayEditais[0].descricao_completa,
+          origem: arrayEditais[0].origem,
+          observacoes: arrayEditais[0].observacoes,
+          status: arrayEditais[0].status,
+          created_at: arrayEditais[0].created_at,
+          updated_at: arrayEditais[0].updated_at
+        });
+      }
       
-      console.log('🔧 Array de editais processado:', editaisLimpos.length, 'editais');
-      console.log('🔍 Exemplo do primeiro edital (original):', arrayEditais[0]);
-      console.log('✨ Exemplo do primeiro edital (limpo):', editaisLimpos[0]);
+      // ✅ Adaptar cada edital do backend
+      const editaisAdaptados = arrayEditais.map((edital: Record<string, unknown>) => {
+        const adaptado = adaptEditalFromBackend(edital);
+        return this.limparDadosEdital(adaptado);
+      });
+      
+      console.log('🔧 Editais processados e adaptados:', editaisAdaptados.length, 'editais');
+      
+      // 🔍 LOG: Mostrar estrutura do primeiro edital APÓS adaptação
+      if (editaisAdaptados.length > 0) {
+        console.log('📋 Estrutura do primeiro edital APÓS ADAPTAÇÃO:', editaisAdaptados[0]);
+      }
 
       return {
-        data: editaisLimpos,
+        data: editaisAdaptados,
         success: true,
         status: resposta.status,
-        message: `${editaisLimpos.length} editais carregados com sucesso`
+        message: `${editaisAdaptados.length} editais carregados com sucesso`
       };
     } catch (erro) {
       console.error('❌ Erro ao carregar editais da API:', erro);
@@ -226,18 +288,15 @@ class ServicoApiEdital {
     };
   }
 
-  async obterEdital(id: number): Promise<ApiResponse<Edital>> {
+  async obterEdital(uuid: string): Promise<ApiResponse<Edital>> {
     try {
-      console.log(`🔍 Buscando edital por ID: ${id}`);
-      const url = `${URL_BASE_API}/editais/${id}`;
+      console.log(`🔍 Buscando edital por UUID: ${uuid}`);
+      const url = `${API_BASE_URL}${API_ENDPOINTS.EDITAIS.DETAIL(uuid)}`;
       console.log(`🌐 URL da requisição: ${url}`);
       
       const resposta = await fetch(url, {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        }
+        headers: this.getAuthHeaders()
       });
       
       console.log(`📡 Status da resposta: ${resposta.status}`);
@@ -263,7 +322,7 @@ class ServicoApiEdital {
       
       // Corrigindo o link do PDF para usar o caminho correto
       if (editalLimpo && editalLimpo.id) {
-        editalLimpo.pdfLink = `${URL_BASE_API}/edital/${editalLimpo.id}`;
+        editalLimpo.pdfLink = `${API_BASE_URL}/api/v1/edital/${editalLimpo.id}`;
       }
       
       return {
@@ -285,52 +344,22 @@ class ServicoApiEdital {
   }
 
   async obterEditalPorApelido(apelido: string): Promise<ApiResponse<Edital>> {
-    try {
-      const resposta = await fetch(`${URL_BASE_API}/editais/apelido/${apelido}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        }
-      });
-      
-      if (!resposta.ok) {
-        throw new Error(`HTTP error! status: ${resposta.status}`);
-      }
-      
-      const edital: Edital = await resposta.json();
-      console.log('🎯 Edital encontrado por apelido (original):', apelido, edital);
-      
-      // Aplicar limpeza de encoding
-      const editalLimpo = this.limparDadosEdital(edital);
-      console.log('✨ Edital limpo por apelido:', editalLimpo);
-      
-      return {
-        data: editalLimpo,
-        success: true,
-        status: resposta.status,
-        message: 'Edital encontrado'
-      };
-    } catch (erro) {
-      console.error('❌ Erro ao buscar edital por apelido:', erro);
-      
-      return {
-        data: null,
-        success: false,
-        status: 404,
-        message: `Edital não encontrado: ${erro instanceof Error ? erro.message : 'Erro desconhecido'}`
-      };
-    }
+    console.warn('⚠️ obterEditalPorApelido: Endpoint /api/v1/editais/apelido/{apelido} não existe no backend');
+    console.warn('⚠️ Use obterEdital(id) com o UUID do edital em vez de apelido');
+    
+    return {
+      data: null,
+      success: false,
+      status: 501,
+      message: 'Endpoint não implementado no backend. Use obterEdital(id) com o UUID do edital.'
+    };
   }
 
-  async atualizarEdital(id: number, dados: EditalUpdateData): Promise<ApiResponse<Edital>> {
+  async atualizarEdital(uuid: string, dados: EditalUpdateData): Promise<ApiResponse<Edital>> {
     try {
-      const resposta = await fetch(`${URL_BASE_API}/editais/${id}`, {
+      const resposta = await fetch(`${API_BASE_URL}${API_ENDPOINTS.EDITAIS.UPDATE(uuid)}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
+        headers: this.getAuthHeaders(),
         body: JSON.stringify(dados)
       });
       
@@ -358,13 +387,17 @@ class ServicoApiEdital {
     }
   }
 
-  async atualizarPdf(id: number, arquivo: File): Promise<ApiResponse<Edital>> {
+  async atualizarPdf(uuid: string, arquivo: File): Promise<ApiResponse<Edital>> {
     try {
       const formData = new FormData();
       formData.append('pdf', arquivo);
       
-      const resposta = await fetch(`${URL_BASE_API}/editais/${id}/pdf`, {
+      const token = TokenService.getAccessToken();
+      const resposta = await fetch(`${API_BASE_URL}/api/v1/editais/${uuid}/pdf`, {
         method: 'PUT',
+        headers: {
+          ...(token && { 'Authorization': `Bearer ${token}` }),
+        },
         body: formData
       });
       
@@ -392,14 +425,11 @@ class ServicoApiEdital {
     }
   }
 
-  async deletarEdital(id: number): Promise<ApiResponse<void>> {
+  async deletarEdital(uuid: string): Promise<ApiResponse<void>> {
     try {
-      const resposta = await fetch(`${URL_BASE_API}/editais/${id}`, {
+      const resposta = await fetch(`${API_BASE_URL}${API_ENDPOINTS.EDITAIS.DELETE(uuid)}`, {
         method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        }
+        headers: this.getAuthHeaders()
       });
       
       if (!resposta.ok) {
@@ -540,56 +570,10 @@ class ServicoApiEdital {
   }
 
   async baixarPdfPorApelido(apelido: string, nomeArquivo?: string): Promise<void> {
-    try {
-      console.log(`Tentando baixar PDF do edital ${apelido}...`);
-      const resposta = await fetch(`${this.urlBase}/editais/apelido/${apelido}/pdf`);
-      
-      if (!resposta.ok) {
-        if (resposta.status === 404) {
-          throw new Error(`PDF não encontrado para este edital. Verifique se o arquivo foi anexado ao edital.`);
-        }
-        if (resposta.status === 500) {
-          throw new Error(`Erro no servidor ao buscar PDF do edital ${apelido}`);
-        }
-        throw new Error(`Erro ao baixar PDF: ${resposta.status} - ${resposta.statusText}`);
-      }
-
-      // Verificar o content-type
-      const tipoConteudo = resposta.headers.get('content-type');
-      console.log('Content-Type recebido:', tipoConteudo);
-      
-      // Extrair nome do arquivo do content-disposition, se disponível
-      let nomeArquivoExtraido = '';
-      const contentDisposition = resposta.headers.get('content-disposition');
-      console.log('Content-Disposition:', contentDisposition);
-      
-      if (contentDisposition) {
-        const filenameMatch = contentDisposition.match(/filename=["']?([^"']+)["']?/i);
-        if (filenameMatch && filenameMatch[1]) {
-          nomeArquivoExtraido = filenameMatch[1];
-          console.log('Nome de arquivo extraído:', nomeArquivoExtraido);
-        }
-      }
-
-      // Obter o blob da resposta
-      const blob = await resposta.blob();
-      
-      if (blob.size === 0) {
-        throw new Error('PDF está vazio ou corrompido');
-      }
-
-      // Usar o nome de arquivo da resposta, ou o fornecido, ou um padrão
-      const nomeArquivoFinal = nomeArquivo || nomeArquivoExtraido || `${apelido}.pdf`;
-      
-      // Fazer o download do blob
-      this.downloadBlob(blob, nomeArquivoFinal);
-      console.log(`PDF do edital ${apelido} baixado com sucesso!`);
-      return;
-      
-    } catch (erro) {
-      console.error('Erro ao baixar PDF:', erro);
-      throw erro;
-    }
+    console.warn('⚠️ baixarPdfPorApelido: Endpoint /editais/apelido/{apelido}/pdf não existe no backend');
+    console.warn('⚠️ Use baixarPdf(pdfUrl) com o URL do PDF do edital em vez de apelido');
+    
+    throw new Error('Endpoint não implementado no backend. Use baixarPdf(pdfUrl) com o URL do PDF do edital.');
   }
 }
 

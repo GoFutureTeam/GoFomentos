@@ -32,12 +32,12 @@ export const useEditaisPortugues = (filtrosIniciais: EditalFilters = {}) => {
 
         // Filtrar editais com data válida
         const editaisFiltrados = resposta.data.filter((edital) => {
-          if (!edital.data_fim_submissao) {
+          if (!edital.data_final_submissao) {
             console.warn(`Edital sem data de submissão:`, edital);
             return false; // Remove editais sem data de submissão
           }
 
-          const dataSubmissao = new Date(edital.data_fim_submissao);
+          const dataSubmissao = new Date(edital.data_final_submissao);
           return dataSubmissao >= dataAtual; // Mantém apenas editais válidos
         });
 
@@ -85,7 +85,7 @@ export const useEditaisPortugues = (filtrosIniciais: EditalFilters = {}) => {
 /**
  * Hook para gerenciar um edital específico
  */
-export const useEditalPortugues = (id?: number) => {
+export const useEditalPortugues = (uuid?: string) => {
   const [edital, setEdital] = useState<Edital | null>(null);
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
@@ -93,10 +93,10 @@ export const useEditalPortugues = (id?: number) => {
   const [verificandoPdf, setVerificandoPdf] = useState<boolean>(false);
   const { toast } = useToast();
 
-  const verificarDisponibilidadePdf = useCallback(async (idEdital: number) => {
+  const verificarDisponibilidadePdf = useCallback(async (uuidEdital: string) => {
     try {
       setVerificandoPdf(true);
-      const isPdfDisponivel = await apiEdital.verificarExistenciaPdf(idEdital.toString());
+      const isPdfDisponivel = await apiEdital.verificarExistenciaPdf(uuidEdital);
       setPdfDisponivel(isPdfDisponivel);
       return isPdfDisponivel;
     } catch (erro) {
@@ -108,26 +108,26 @@ export const useEditalPortugues = (id?: number) => {
     }
   }, []);
 
-  const buscarEdital = useCallback(async (idEdital: number) => {
-    console.log(`🚀 Hook useEditalPortugues: Iniciando busca do edital ID: ${idEdital}`);
+  const buscarEdital = useCallback(async (uuidEdital: string) => {
+    console.log(`🚀 Hook useEditalPortugues: Iniciando busca do edital UUID: ${uuidEdital}`);
     setCarregando(true);
     setErro(null);
     
     try {
-      console.log(`📞 Hook useEditalPortugues: Chamando apiEdital.obterEdital(${idEdital})`);
-      const resposta = await apiEdital.obterEdital(idEdital);
+      console.log(`📞 Hook useEditalPortugues: Chamando apiEdital.obterEdital(${uuidEdital})`);
+      const resposta = await apiEdital.obterEdital(uuidEdital);
       console.log(`📦 Hook useEditalPortugues: Resposta recebida:`, resposta);
       
       if (resposta.success) {
         console.log(`✅ Hook useEditalPortugues: Dados do edital carregados:`, resposta.data);
         setEdital(resposta.data);
         // Verifica a disponibilidade do PDF após carregar o edital
-        verificarDisponibilidadePdf(idEdital);
+        verificarDisponibilidadePdf(uuidEdital);
       } else {
         throw new Error(resposta.message || 'Erro ao carregar edital');
       }
     } catch (err) {
-      console.error(`❌ Hook useEditalPortugues: Erro ao carregar edital ${idEdital}:`, err);
+      console.error(`❌ Hook useEditalPortugues: Erro ao carregar edital ${uuidEdital}:`, err);
       const mensagemErro = err instanceof Error ? err.message : 'Erro desconhecido';
       setErro(mensagemErro);
       toast({
@@ -140,10 +140,10 @@ export const useEditalPortugues = (id?: number) => {
     }
   }, [toast, verificarDisponibilidadePdf]);
 
-  const baixarPdf = useCallback(async (idEdital: number, nomeArquivo?: string) => {
+  const baixarPdf = useCallback(async (uuidEdital: string, nomeArquivo?: string) => {
     try {
       // Primeiro verifica se o PDF existe
-      const isPdfDisponivel = await verificarDisponibilidadePdf(idEdital);
+      const isPdfDisponivel = await verificarDisponibilidadePdf(uuidEdital);
       
       if (!isPdfDisponivel) {
         toast({
@@ -159,7 +159,7 @@ export const useEditalPortugues = (id?: number) => {
         description: "Preparando o download do PDF...",
       });
       
-      await apiEdital.baixarPdf(idEdital.toString(), nomeArquivo);
+      await apiEdital.baixarPdf(uuidEdital, nomeArquivo);
       
       toast({
         title: "Sucesso",
@@ -181,10 +181,10 @@ export const useEditalPortugues = (id?: number) => {
   }, [toast, verificarDisponibilidadePdf]);
 
   useEffect(() => {
-    if (id) {
-      buscarEdital(id);
+    if (uuid) {
+      buscarEdital(uuid);
     }
-  }, [id, buscarEdital]);
+  }, [uuid, buscarEdital]);
 
   return {
     edital,
@@ -274,9 +274,9 @@ export const useMutacoesEdital = () => {
     }
   }, [toast]);
 
-  const atualizarEdital = useCallback(async (id: number, dados: EditalUpdateData): Promise<Edital | null> => {
+  const atualizarEdital = useCallback(async (uuid: string, dados: EditalUpdateData): Promise<Edital | null> => {
     try {
-      const resposta = await apiEdital.atualizarEdital(id, dados);
+      const resposta = await apiEdital.atualizarEdital(uuid, dados);
       
       if (resposta.success) {
         toast({
@@ -298,9 +298,9 @@ export const useMutacoesEdital = () => {
     }
   }, [toast]);
 
-  const atualizarPdf = useCallback(async (id: number, arquivo: File): Promise<Edital | null> => {
+  const atualizarPdf = useCallback(async (uuid: string, arquivo: File): Promise<Edital | null> => {
     try {
-      const resposta = await apiEdital.atualizarPdf(id, arquivo);
+      const resposta = await apiEdital.atualizarPdf(uuid, arquivo);
       
       if (resposta.success) {
         toast({
@@ -322,13 +322,13 @@ export const useMutacoesEdital = () => {
     }
   }, [toast]);
 
-  const deletarEdital = useCallback(async (id: number): Promise<boolean> => {
+  const deletarEdital = useCallback(async (uuid: string): Promise<boolean> => {
     if (!confirm('Tem certeza que deseja deletar este edital? Esta ação não pode ser desfeita.')) {
       return false;
     }
 
     try {
-      const resposta = await apiEdital.deletarEdital(id);
+      const resposta = await apiEdital.deletarEdital(uuid);
       
       if (resposta.success) {
         toast({

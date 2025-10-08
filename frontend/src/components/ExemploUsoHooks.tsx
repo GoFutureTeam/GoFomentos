@@ -161,7 +161,7 @@ const ExemploUsoHooks: React.FC = () => {
                     </div>
                     <div>
                       <h3 className="font-semibold">Data de Submissão</h3>
-                      <p>{edital.data_fim_submissao || 'Não informada'}</p>
+                      <p>{edital.data_final_submissao || 'Não informada'}</p>
                     </div>
                     <div>
                       <h3 className="font-semibold">Contrapartida</h3>

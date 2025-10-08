@@ -29,19 +29,30 @@ export const useEditaisAvancadoPortugues = (filtrosIniciais: EditalFilters = {})
         console.log("Editais recebidos da API:", resposta.data);
         
         const dataAtual = new Date();
+        dataAtual.setHours(0, 0, 0, 0); // ✅ Zerar horas para comparação apenas de data
 
-        // Filtrar editais com data válida
+        // ✅ Filtrar editais com data de submissão válida (não vencida)
         const editaisFiltrados = resposta.data.filter((edital) => {
-          if (!edital.data_fim_submissao) {
-            console.warn(`Edital sem data de submissão:`, edital);
+          // ✅ CAMPO ATUALIZADO: data_final_submissao
+          if (!edital.data_final_submissao) {
+            console.warn(`⚠️ Edital sem data_final_submissao:`, edital.apelido_edital);
             return false; // Remove editais sem data de submissão
           }
 
-          const dataSubmissao = new Date(edital.data_fim_submissao);
-          return dataSubmissao >= dataAtual; // Mantém apenas editais válidos
+          const dataSubmissao = new Date(edital.data_final_submissao);
+          dataSubmissao.setHours(0, 0, 0, 0); // ✅ Zerar horas para comparação
+
+          // ✅ Mantém apenas editais com data futura ou hoje
+          const estaVencido = dataSubmissao == dataAtual;
+          
+          if (estaVencido) {
+            console.log(`🚫 Edital vencido oculto: ${edital.apelido_edital} (Data: ${edital.data_final_submissao})`);
+          }
+
+          return !estaVencido; // Remove editais vencidos
         });
 
-        console.log("Editais filtrados:", editaisFiltrados);
+        console.log("✅ Editais filtrados (não vencidos):", editaisFiltrados);
         setEditais(editaisFiltrados);
         setTotalContagem(editaisFiltrados.length);
       } else {
