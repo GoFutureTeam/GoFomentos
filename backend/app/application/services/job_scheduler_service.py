@@ -356,7 +356,8 @@ class JobSchedulerService:
                         'data_limite': edital_info.get('data_limite').isoformat() if edital_info.get('data_limite') else None,
                         'data_publicacao': edital_info.get('data_publicacao').isoformat() if edital_info.get('data_publicacao') else None,
                         'financiador_1': 'FAPESQ-PB',
-                        'origem': 'FAPESQ'
+                        'origem': 'FAPESQ',
+                        'link': pdf_url  # Garantir que o link do PDF seja salvo
                     }
 
                     # Merge metadata extra e salvar novamente
@@ -467,7 +468,8 @@ class JobSchedulerService:
                         'descricao': edital_info.get('descricao'),
                         'data_limite': edital_info.get('data_limite').isoformat() if edital_info.get('data_limite') else None,
                         'financiador_1': 'Governo da Paraíba - SECTIES',
-                        'origem': 'Paraíba Gov'
+                        'origem': 'Paraíba Gov',
+                        'link': pdf_url  # Garantir que o link do PDF seja salvo
                     }
 
                     # Merge metadata extra e salvar novamente
@@ -633,7 +635,8 @@ class JobSchedulerService:
                                 'status': edital_info.get('status', 'Em andamento'),
                                 'ano': edital_info.get('ano'),
                                 'financiador_1': 'CONFAP',
-                                'origem': 'CONFAP'
+                                'origem': 'CONFAP',
+                                'link': pdf_url  # Garantir que o link do PDF seja salvo
                             }
 
                             # Merge metadata extra e salvar novamente
@@ -792,7 +795,8 @@ class JobSchedulerService:
                             'apelido_edital': titulo,
                             'ano': ano,
                             'financiador_1': 'CAPES',
-                            'origem': 'CAPES'
+                            'origem': 'CAPES',
+                            'link': pdf_url  # Garantir que o link do PDF seja salvo
                         }
 
                         # Merge metadata extra e salvar novamente
@@ -958,7 +962,8 @@ class JobSchedulerService:
                                 'url_detalhes': detail_url,
                                 'data_limite': chamada_info.get('data_limite').isoformat() if chamada_info.get('data_limite') else None,
                                 'financiador_1': 'FINEP',
-                                'origem': 'FINEP'
+                                'origem': 'FINEP',
+                                'link': pdf_url  # Garantir que o link do PDF seja salvo
                             }
 
                             # Merge metadata extra e salvar novamente

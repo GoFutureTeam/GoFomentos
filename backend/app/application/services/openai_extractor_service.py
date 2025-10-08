@@ -72,6 +72,10 @@ class OpenAIExtractorService:
             Dict: Dicionário merged
         """
         for key, value in new.items():
+            # Nunca sobrescrever link e uuid que vêm do sistema
+            if key in ["link", "uuid"]:
+                continue
+
             if value is not None and value != "":
                 # Se o campo ainda não existe ou é nulo, adiciona
                 if accumulated.get(key) is None or accumulated.get(key) == "":
@@ -170,6 +174,13 @@ class OpenAIExtractorService:
                         print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ⚠️ Pulando chunk {i} após {max_retries + 1} tentativas")
                         break
 
+        # ✅ GARANTIR QUE LINK E UUID ESTEJAM PRESENTES
+        accumulated_vars["link"] = pdf_url
+        accumulated_vars["uuid"] = edital_uuid
+
+        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] 🔗 DEBUG: Link do PDF antes de salvar: '{pdf_url}'")
+        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] 🔗 DEBUG: Link em accumulated_vars: '{accumulated_vars.get('link')}'")
+
         # ✅ SALVAR CONSOLIDADO FINAL NO MONGODB
         await self.edital_repo.save_final_extraction(
             edital_uuid=edital_uuid,
@@ -193,41 +204,57 @@ class OpenAIExtractorService:
             Dict[str, Any]: Variáveis extraídas
         """
         prompt = f"""
-Você é um extrator de informações de editais do CNPq.
-Extraia os seguintes campos em formato JSON válido:
+Você é um especialista em análise de editais de fomento à pesquisa e inovação no Brasil.
+Sua tarefa é extrair informações estruturadas de editais de agências como CNPq, FAPESQ, FINEP, CONFAP, CAPES, etc.
+
+INSTRUÇÕES IMPORTANTES:
+1. Leia TODO o texto cuidadosamente antes de extrair
+2. Se um campo não estiver explícito no texto, preencha com null (não com string vazia)
+3. Para datas, use o formato YYYY-MM-DD
+4. Para valores monetários, extraia apenas o número (sem R$, pontos ou vírgulas)
+5. Para percentuais, extraia apenas o número (sem % ou símbolos)
+6. Para durações, converta para MESES (ex: "12 meses", "1 ano" = 12 meses)
+7. Para booleanos, use true/false (não strings)
+
+CAMPOS A EXTRAIR:
 
 {{
-  "apelido_edital": "STRING",
-  "financiador_1": "STRING",
-  "financiador_2": "STRING",
-  "area_foco": "STRING",
-  "tipo_proponente": "STRING",
-  "empresas_que_podem_submeter": "STRING",
-  "duracao_min_meses": "NUMBER",
-  "duracao_max_meses": "NUMBER",
-  "valor_min_R$": "NUMBER",
-  "valor_max_R$": "NUMBER",
-  "tipo_recurso": "STRING",
-  "recepcao_recursos": "STRING",
-  "custeio": "BOOLEAN",
-  "capital": "BOOLEAN",
-  "contrapartida_min_%": "NUMBER",
-  "contrapartida_max_%": "NUMBER",
-  "tipo_contrapartida": "STRING",
-  "data_inicial_submissao": "YYYY-MM-DD",
-  "data_final_submissao": "YYYY-MM-DD",
-  "data_resultado": "YYYY-MM-DD",
-  "descricao_completa": "STRING",
-  "origem": "CNPq",
-  "observacoes": "STRING"
+  "apelido_edital": "Título/nome completo do edital (ex: 'Chamada Pública FAPESQ Nº 01/2025')",
+  "financiador_1": "Instituição principal que financia (ex: 'CNPq', 'FAPESQ-PB', 'FINEP', 'CONFAP', 'CAPES')",
+  "financiador_2": "Instituição secundária ou parceira (null se não houver)",
+  "area_foco": "Área(s) temática(s) do edital (ex: 'Saúde', 'Tecnologia', 'Mudanças Climáticas')",
+  "tipo_proponente": "Quem pode se candidatar (ex: 'Pesquisadores doutores', 'Instituições de Ensino', 'Empresas')",
+  "empresas_que_podem_submeter": "Tipos específicos de empresas elegíveis (ex: 'PMEs', 'Startups', 'Empresas brasileiras')",
+  "duracao_min_meses": "Duração mínima do projeto EM MESES (número inteiro ou null)",
+  "duracao_max_meses": "Duração máxima do projeto EM MESES (número inteiro ou null)",
+  "valor_min_R$": "Valor mínimo de financiamento em REAIS (número ou null)",
+  "valor_max_R$": "Valor máximo de financiamento em REAIS (número ou null)",
+  "tipo_recurso": "Tipo de recurso oferecido (ex: 'Bolsas', 'Financiamento não-reembolsável', 'Subvenção econômica')",
+  "recepcao_recursos": "Como os recursos serão recebidos (ex: 'Diretamente ao pesquisador', 'Via instituição')",
+  "custeio": "Permite gastos de custeio? (true/false/null)",
+  "capital": "Permite gastos de capital (equipamentos)? (true/false/null)",
+  "contrapartida_min_%": "Percentual mínimo de contrapartida exigida (número ou null)",
+  "contrapartida_max_%": "Percentual máximo de contrapartida exigida (número ou null)",
+  "tipo_contrapartida": "Tipo de contrapartida aceita (ex: 'Financeira', 'Econômica', 'Não há')",
+  "data_inicial_submissao": "Data de ABERTURA das submissões (YYYY-MM-DD ou null)",
+  "data_final_submissao": "Data de ENCERRAMENTO/PRAZO das submissões (YYYY-MM-DD ou null)",
+  "data_resultado": "Data prevista para divulgação dos RESULTADOS (YYYY-MM-DD ou null)",
+  "descricao_completa": "Resumo do objetivo/finalidade do edital em 1-2 frases",
+  "origem": "Agência de origem (extraia do texto: 'CNPq', 'FAPESQ', 'FINEP', 'CONFAP', 'CAPES', 'Governo da Paraíba', etc.)",
+  "observacoes": "Observações importantes, requisitos especiais ou restrições mencionadas"
 }}
 
-Se algum campo não estiver presente neste trecho, preencha com null.
-Retorne APENAS o JSON, sem texto adicional.
+IMPORTANTE:
+- Este é o chunk {chunk_index} de {total_chunks}. Alguns campos podem estar em outros chunks.
+- Retorne APENAS o JSON válido, sem markdown, comentários ou texto adicional.
+- Use null para campos ausentes, NÃO use string vazia "" ou "null".
 
-Texto do edital (chunk {chunk_index}/{total_chunks}):
+Texto do edital:
+---
 {chunk}
-"""
+---
+
+JSON extraído:"""
 
         response = await self.client.chat.completions.create(
             model="gpt-4o-mini",
@@ -248,6 +275,12 @@ Texto do edital (chunk {chunk_index}/{total_chunks}):
         # Parse JSON
         try:
             variables = json.loads(resposta_llm)
+
+            # Converter strings "null" em None
+            for key, value in variables.items():
+                if isinstance(value, str) and value.lower() == "null":
+                    variables[key] = None
+
             return variables
         except json.JSONDecodeError as e:
             print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ⚠️ Resposta não é JSON válido: {e}")

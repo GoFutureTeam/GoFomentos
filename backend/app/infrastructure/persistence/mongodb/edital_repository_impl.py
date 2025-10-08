@@ -152,6 +152,8 @@ class MongoEditalRepository(EditalRepository):
         from datetime import datetime
         collection = self._get_collection()
 
+        print(f"[{datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')}] 🔗 DEBUG REPO: Link recebido no save_final_extraction: '{consolidated_variables.get('link')}'")
+
         # Preparar dados consolidados
         update_data = {
             "extraction_status": status,
@@ -162,8 +164,12 @@ class MongoEditalRepository(EditalRepository):
         # Adicionar variáveis consolidadas aos campos principais
         # (para facilitar busca e consumo pelo frontend)
         for key, value in consolidated_variables.items():
-            if value is not None and key not in ["link", "uuid"]:
+            if key == "uuid":
+                continue
+            if value is not None:
                 update_data[key] = value
+
+        print(f"[{datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')}] 🔗 DEBUG REPO: Link em update_data: '{update_data.get('link')}'")
 
         # Atualizar edital
         await collection.update_one(

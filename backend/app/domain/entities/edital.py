@@ -174,8 +174,15 @@ class Edital:
             'created_at', 'updated_at'
         }
 
-        # Filtrar apenas campos válidos
-        filtered_data = {k: v for k, v in data.items() if k in valid_fields}
+        # Filtrar apenas campos válidos e converter strings "null" em None
+        filtered_data = {}
+        for k, v in data.items():
+            if k in valid_fields:
+                # Converter string "null" em None
+                if isinstance(v, str) and v.lower() == "null":
+                    filtered_data[k] = None
+                else:
+                    filtered_data[k] = v
 
         # Garantir campos obrigatórios com valores padrão
         if 'apelido_edital' not in filtered_data:
