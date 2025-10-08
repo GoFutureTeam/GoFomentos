@@ -20,6 +20,13 @@ const SidebarCard: React.FC<SidebarCardProps> = ({
     console.debug('Conteúdo recebido pelo SidebarCard:', { edital, onDownload, downloadEnabled, pdfChecking });
   }, [edital, onDownload, downloadEnabled, pdfChecking]);
 
+  // Helper para verificar se um valor existe
+  const temValor = (valor: unknown): boolean => {
+    if (valor === null || valor === undefined) return false;
+    if (typeof valor === 'string' && valor.trim() === '') return false;
+    return true;
+  };
+
   const handleDownload = () => {
     if (onDownload) {
       setIsDownloading(true);
@@ -44,22 +51,30 @@ const SidebarCard: React.FC<SidebarCardProps> = ({
         {/* Seção com valores da API */}
         <div className="mb-6">
           <div className="grid grid-cols-2 gap-x-8 gap-y-4 text-sm">
-            <div>
-              <h4 className="text-[rgba(67,80,88,1)] font-bold mb-2">Contrapartida</h4>
-              <div className="text-black font-medium">{edital.contrapartida || 'Não especificado'}</div>
-            </div>
-            <div>
-              <h4 className="text-[rgba(67,80,88,1)] font-bold mb-2">Empresa</h4>
-              <div className="text-black font-medium">{edital.empresa || 'Não especificado'}</div>
-            </div>
-            <div>
-              <h4 className="text-[rgba(67,80,88,1)] font-bold mb-2">Cobertura</h4>
-              <div className="text-black font-medium">{edital.origem || 'Não especificado'}</div>
-            </div>
-            <div>
-              <h4 className="text-[rgba(67,80,88,1)] font-bold mb-2">Cooperação</h4>
-              <div className="text-black font-medium">{edital.cooperacao || 'Não especificado'}</div>
-            </div>
+            {temValor(edital.contrapartida) && (
+              <div>
+                <h4 className="text-[rgba(67,80,88,1)] font-bold mb-2">Contrapartida</h4>
+                <div className="text-black font-medium">{edital.contrapartida}</div>
+              </div>
+            )}
+            {temValor(edital.empresa) && (
+              <div>
+                <h4 className="text-[rgba(67,80,88,1)] font-bold mb-2">Empresa</h4>
+                <div className="text-black font-medium">{edital.empresa}</div>
+              </div>
+            )}
+            {temValor(edital.origem) && (
+              <div>
+                <h4 className="text-[rgba(67,80,88,1)] font-bold mb-2">Cobertura</h4>
+                <div className="text-black font-medium">{edital.origem}</div>
+              </div>
+            )}
+            {temValor(edital.cooperacao) && (
+              <div>
+                <h4 className="text-[rgba(67,80,88,1)] font-bold mb-2">Cooperação</h4>
+                <div className="text-black font-medium">{edital.cooperacao}</div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -67,34 +82,40 @@ const SidebarCard: React.FC<SidebarCardProps> = ({
         <div className="h-px bg-black my-6" />
         
         {/* Temas Transversais */}
-        <div className="mb-4">
-          <div className="bg-[rgba(0,0,0,0.75)] text-[rgba(248,248,248,1)] font-extrabold rounded-[13px] px-4 py-1 mb-3 text-sm inline-block">
-            Temas Transversais
+        {temValor(edital.area_foco) && (
+          <div className="mb-4">
+            <div className="bg-[rgba(0,0,0,0.75)] text-[rgba(248,248,248,1)] font-extrabold rounded-[13px] px-4 py-1 mb-3 text-sm inline-block">
+              Temas Transversais
+            </div>
+            <div className="text-black font-medium text-sm leading-relaxed">
+              {edital.area_foco}
+            </div>
           </div>
-          <div className="text-black font-medium text-sm leading-relaxed">
-            {edital.area_foco || 'Não especificado'}
-          </div>
-        </div>
+        )}
         
         {/* Público-alvo */}
-        <div className="mb-4">
-          <div className="bg-[rgba(0,0,0,0.75)] text-[rgba(248,248,248,1)] font-extrabold rounded-[13px] px-4 py-1 mb-3 text-sm inline-block">
-            Público-alvo
+        {temValor(edital.empresas_elegiveis) && (
+          <div className="mb-4">
+            <div className="bg-[rgba(0,0,0,0.75)] text-[rgba(248,248,248,1)] font-extrabold rounded-[13px] px-4 py-1 mb-3 text-sm inline-block">
+              Público-alvo
+            </div>
+            <div className="text-black font-medium text-sm leading-relaxed">
+              {edital.empresas_elegiveis}
+            </div>
           </div>
-          <div className="text-black font-medium text-sm leading-relaxed">
-            {edital.empresas_elegiveis || 'Não especificado'}
-          </div>
-        </div>
+        )}
 
         {/* Benefícios desse Edital */}
-        <div className="mb-6">
-          <div className="bg-[rgba(0,0,0,0.75)] text-[rgba(248,248,248,1)] font-extrabold rounded-[13px] px-4 py-1 mb-3 text-sm inline-block">
-            Benefícios desse Edital
+        {temValor(edital.descricao_completa || edital.descricao) && (
+          <div className="mb-6">
+            <div className="bg-[rgba(0,0,0,0.75)] text-[rgba(248,248,248,1)] font-extrabold rounded-[13px] px-4 py-1 mb-3 text-sm inline-block">
+              Benefícios desse Edital
+            </div>
+            <div className="text-black font-medium text-sm leading-relaxed">
+              {edital.descricao_completa || edital.descricao}
+            </div>
           </div>
-          <div className="text-black font-medium text-sm leading-relaxed">
-            {edital.descricao_completa || edital.descricao || 'Não especificado'}
-          </div>
-        </div>
+        )}
 
         {/* Botão de Download */}
         {edital.link ? (

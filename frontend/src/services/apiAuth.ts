@@ -146,7 +146,7 @@ class AuthService {
 
   async fetchAndStoreUserData(token: string): Promise<void> {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/users/me`, {
+      const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.USERS.ME}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },

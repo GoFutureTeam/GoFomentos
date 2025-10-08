@@ -8,39 +8,60 @@ const API_VERSION = '/api/v1'; // ✅ Backend usa /api/v1 para todas as rotas
 
 /**
  * Endpoints da API organizados por recurso
- * IMPORTANTE: Backend usa /api/v1/* para todas as rotas
+ * ✅ CORRIGIDO: Alinhado com rotas reais do backend
  */
 export const API_ENDPOINTS = {
   AUTH: {
-    REGISTER: `${API_VERSION}/auth/register`,
-    LOGIN: `${API_VERSION}/auth/login`,
+    REGISTER: `${API_VERSION}/users`,  // ✅ POST /api/v1/users
+    LOGIN: `/login`,                    // ✅ POST /login (sem /api/v1)
     // ❌ Recuperação de senha não existe no backend ainda
     // REQUEST_PASSWORD_RESET: '/api/reset-password',
     // RESET_PASSWORD: '/api/reset-password/confirm',
   },
-  
+
+  USERS: {
+    ME: `${API_VERSION}/users/me`,     // ✅ GET /api/v1/users/me
+    DETAIL: (id: string) => `${API_VERSION}/users/${id}`,
+  },
+
   EDITAIS: {
     LIST: `${API_VERSION}/editais`,
     CREATE: `${API_VERSION}/editais`,
-    DETAIL: (id: string | number) => `${API_VERSION}/editais/${id}`,
-    UPDATE: (id: string | number) => `${API_VERSION}/editais/${id}`,
-    DELETE: (id: string | number) => `${API_VERSION}/editais/${id}`,
+    DETAIL: (uuid: string) => `${API_VERSION}/editais/${uuid}`,
+    UPDATE: (uuid: string) => `${API_VERSION}/editais/${uuid}`,
+    DELETE: (uuid: string) => `${API_VERSION}/editais/${uuid}`,
   },
-  
+
   PROJECTS: {
     LIST: `${API_VERSION}/projects`,
     CREATE: `${API_VERSION}/projects`,
-    DETAIL: (id: string | number) => `${API_VERSION}/projects/${id}`,
-    UPDATE: (id: string | number) => `${API_VERSION}/projects/${id}`,
-    DELETE: (id: string | number) => `${API_VERSION}/projects/${id}`,
+    ME: `${API_VERSION}/projects/me`,
+    DETAIL: (id: string) => `${API_VERSION}/projects/${id}`,
+    UPDATE: (id: string) => `${API_VERSION}/projects/${id}`,
+    DELETE: (id: string) => `${API_VERSION}/projects/${id}`,
   },
-  
-  HEALTH: {
-    CHECK: `${API_VERSION}/health`,
-  },
-};
 
-/**
+  CHROMA: {
+    SEARCH: `/api/chroma/search`,        // ✅ POST /api/chroma/search
+    STATS: `/api/chroma/stats`,          // ✅ GET /api/chroma/stats
+    DOCUMENTS: `/api/chroma/documents`,  // ✅ GET /api/chroma/documents
+    EDITAIS: `/api/chroma/editais`,      // ✅ POST /api/chroma/editais
+    CLEAR: `/api/chroma/clear`,          // ✅ DELETE /api/chroma/clear
+  },
+
+  JOBS: {
+    LIST: `${API_VERSION}/jobs`,
+    DETAIL: (id: string) => `${API_VERSION}/jobs/${id}`,
+    EXECUTE_CNPQ: `${API_VERSION}/jobs/cnpq/execute`,
+    EXECUTE_FAPESQ: `${API_VERSION}/jobs/fapesq/execute`,
+  },
+
+  HEALTH: {
+    CHECK: `/health`,  // ✅ GET /health (sem /api/v1)
+  },
+
+  ROOT: `/`,  // ✅ GET / (raiz)
+};/**
  * Retorna a URL base da API
  */
 export function getApiBaseUrl(): string {

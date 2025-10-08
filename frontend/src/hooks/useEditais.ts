@@ -26,12 +26,12 @@ export const useEditais = (initialFilters: EditalFilters = {}) => {
 
         // Filtrar editais com data válida
         const filteredEditais = response.data.filter((edital) => {
-          if (!edital.data_fim_submissao) {
+          if (!edital.data_final_submissao) {
             console.warn(`Edital sem data de submissão:`, edital);
             return false; // Remove editais sem data de submissão
           }
 
-          const submissionDate = new Date(edital.data_fim_submissao);
+          const submissionDate = new Date(edital.data_final_submissao);
           return submissionDate >= currentDate; // Mantém apenas editais válidos
         });
 

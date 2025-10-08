@@ -24,6 +24,14 @@ const CommonHeader: React.FC<CommonHeaderProps> = ({
 }) => {
   const location = useLocation();
 
+  // Truncar título se for muito longo
+  const truncateTitle = (text: string, maxLength: number = 100) => {
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength) + '...';
+  };
+
+  const displayTitle = truncateTitle(title);
+
   // Gerar breadcrumb baseado na rota atual (sem o item Inicio)
   const getBreadcrumbItems = () => {
     const path = location.pathname.split("/").filter(Boolean);
@@ -46,6 +54,12 @@ const CommonHeader: React.FC<CommonHeaderProps> = ({
           .split('-')
           .map(word => word.charAt(0).toUpperCase() + word.slice(1))
           .join(' ');
+      }
+
+      // Limitar o tamanho do label (truncar se for UUID ou texto muito longo)
+      const maxLength = 40;
+      if (label.length > maxLength) {
+        label = label.substring(0, maxLength) + '...';
       }
 
       return {
@@ -108,8 +122,11 @@ const CommonHeader: React.FC<CommonHeaderProps> = ({
 
             <div className="flex gap-8 flex-col lg:flex-row items-center">
               <div className="w-full lg:w-[65%]">
-                <h1 className="text-[rgba(248,248,248,1)] text-4xl sm:text-5xl font-black leading-tight tracking-wide mb-6 lg:text-5xl">
-                  {title}
+                <h1 
+                  className="text-[rgba(248,248,248,1)] text-4xl sm:text-5xl font-black leading-tight tracking-wide mb-6 lg:text-5xl line-clamp-2 cursor-default"
+                  title={title}
+                >
+                  {displayTitle}
                 </h1>
                 {description && (
                   <p className="text-[rgba(248,248,248,1)] text-xl font-medium leading-relaxed">

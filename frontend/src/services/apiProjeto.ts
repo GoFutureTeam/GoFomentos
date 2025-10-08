@@ -1,3 +1,6 @@
+import { API_ENDPOINTS } from './api';
+import TokenService from './tokenService';
+
 // Interface atualizada para corresponder ao backend
 export interface DadosProjeto {
   id?: string;
@@ -30,47 +33,61 @@ interface RespostaApi<T> {
   mensagem: string;
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8002';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8002';
 
 /**
  * Classe de serviço para gerenciar projetos na API
+ * ✅ CORRIGIDO: Usando API_ENDPOINTS centralizados
  */
 class ServicoApiProjeto {
+  /**
+   * ✅ CORRIGIDO: Usar TokenService em vez de localStorage direto
+   */
   private getHeaders() {
-    const token = localStorage.getItem('auth_token');
+    const token = TokenService.getAccessToken();
     return {
       'Content-Type': 'application/json',
-      'Authorization': token ? `Bearer ${token}` : '',
+      'Accept': 'application/json',
+      ...(token && { 'Authorization': `Bearer ${token}` }),
     };
   }
   
+  
   /**
-   * Busca todos os projetos do usuário autenticado
+   * Busca MEUS projetos (do usuário autenticado)
+   * ✅ CORRIGIDO: Usar /api/v1/projects/me em vez de /api/v1/projects
    */
   async listarProjetos(): Promise<RespostaApi<DadosProjeto[]>> {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/projects`, {
+      // ✅ CORRETO: /api/v1/projects/me (único endpoint GET disponível)
+      const url = `${API_BASE_URL}${API_ENDPOINTS.PROJECTS.ME}`;
+      console.log('🔗 Buscando MEUS projetos em:', url);
+
+      const response = await fetch(url, {
+        method: 'GET',
         headers: this.getHeaders(),
       });
 
       if (response.status === 401) {
-        localStorage.removeItem('auth_token');
+        TokenService.clearTokens();
         throw new Error('Sessão expirada. Por favor, faça login novamente.');
       }
 
       if (!response.ok) {
-        throw new Error('Erro ao listar projetos');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail || 'Erro ao listar projetos');
       }
 
       const dados = await response.json();
-      
+      console.log('✅ Meus projetos carregados:', dados.length || 0);
+
       return {
         dados,
         sucesso: true,
         mensagem: 'Projetos carregados com sucesso'
       };
     } catch (erro) {
-      console.error('Erro ao listar projetos:', erro);
+      console.error('❌ Erro ao listar projetos:', erro);
       return {
         dados: [],
         sucesso: false,
@@ -78,18 +95,24 @@ class ServicoApiProjeto {
       };
     }
   }
-  
+
   /**
    * Busca um projeto específico pelo ID
+   * ✅ CORRIGIDO: URL de /api/projects/{id} → /api/v1/projects/{id}
    */
   async obterProjeto(id: string): Promise<RespostaApi<DadosProjeto>> {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/projects/${id}`, {
+      const url = `${API_BASE_URL}${API_ENDPOINTS.PROJECTS.DETAIL(id)}`;  // ✅ /api/v1/projects/{id}
+      console.log('🔗 Buscando projeto em:', url);
+
+      const response = await fetch(url, {
+        method: 'GET',
         headers: this.getHeaders(),
       });
 
       if (!response.ok) {
-        throw new Error('Erro ao buscar projeto');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail || 'Erro ao buscar projeto');
       }
 
       const dados = await response.json();
@@ -100,7 +123,7 @@ class ServicoApiProjeto {
         mensagem: 'Projeto encontrado com sucesso'
       };
     } catch (erro) {
-      console.error(`Erro ao buscar projeto ${id}:`, erro);
+      console.error(`❌ Erro ao buscar projeto ${id}:`, erro);
       return {
         dados: {} as DadosProjeto,
         sucesso: false,
@@ -111,14 +134,18 @@ class ServicoApiProjeto {
   
   /**
    * Salva um projeto (cria novo ou atualiza existente)
+   * ✅ CORRIGIDO: URLs de /api/projects → /api/v1/projects
    */
   async salvarProjeto(dadosProjeto: DadosProjeto): Promise<RespostaApi<DadosProjeto>> {
     try {
       const url = dadosProjeto.id 
-        ? `${API_BASE_URL}/api/projects/${dadosProjeto.id}`
-        : `${API_BASE_URL}/api/projects`;
+        ? `${API_BASE_URL}${API_ENDPOINTS.PROJECTS.UPDATE(dadosProjeto.id)}`  // ✅ /api/v1/projects/{id}
+        : `${API_BASE_URL}${API_ENDPOINTS.PROJECTS.CREATE}`;  // ✅ /api/v1/projects
       
       const method = dadosProjeto.id ? 'PUT' : 'POST';
+
+      console.log(`💾 ${method} projeto em:`, url);
+      console.log('📦 Dados:', dadosProjeto);
 
       const response = await fetch(url, {
         method,
@@ -127,16 +154,18 @@ class ServicoApiProjeto {
       });
 
       if (response.status === 401) {
-        localStorage.removeItem('auth_token');
+        TokenService.clearTokens();
         throw new Error('Sessão expirada. Por favor, faça login novamente.');
       }
 
       if (!response.ok) {
-        const error = await response.json();
+        const error = await response.json().catch(() => ({}));
+        console.error('❌ Erro do servidor:', error);
         throw new Error(error.detail || 'Erro ao salvar projeto');
       }
 
       const dados = await response.json();
+      console.log('✅ Projeto salvo:', dados);
       
       return {
         dados,
@@ -144,7 +173,7 @@ class ServicoApiProjeto {
         mensagem: dadosProjeto.id ? 'Projeto atualizado com sucesso' : 'Projeto criado com sucesso'
       };
     } catch (erro) {
-      console.error('Erro ao salvar projeto:', erro);
+      console.error('❌ Erro ao salvar projeto:', erro);
       return {
         dados: dadosProjeto,
         sucesso: false,
@@ -155,17 +184,24 @@ class ServicoApiProjeto {
   
   /**
    * Exclui um projeto pelo ID
+   * ✅ CORRIGIDO: URL de /api/projects/{id} → /api/v1/projects/{id}
    */
   async excluirProjeto(id: string): Promise<RespostaApi<void>> {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/projects/${id}`, {
+      const url = `${API_BASE_URL}${API_ENDPOINTS.PROJECTS.DELETE(id)}`;  // ✅ /api/v1/projects/{id}
+      console.log('🗑️ Excluindo projeto em:', url);
+
+      const response = await fetch(url, {
         method: 'DELETE',
         headers: this.getHeaders(),
       });
 
       if (!response.ok) {
-        throw new Error('Erro ao excluir projeto');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail || 'Erro ao excluir projeto');
       }
+
+      console.log('✅ Projeto excluído');
 
       return {
         dados: undefined,
@@ -173,13 +209,21 @@ class ServicoApiProjeto {
         mensagem: 'Projeto excluído com sucesso'
       };
     } catch (erro) {
-      console.error(`Erro ao excluir projeto ${id}:`, erro);
+      console.error(`❌ Erro ao excluir projeto ${id}:`, erro);
       return {
         dados: undefined,
         sucesso: false,
         mensagem: `Erro ao excluir projeto: ${erro instanceof Error ? erro.message : 'Erro desconhecido'}`
       };
     }
+  }
+
+  /**
+   * ✅ NOVO: Busca projetos do usuário logado (mesmo que listarProjetos)
+   */
+  async listarMeusProjetos(): Promise<RespostaApi<DadosProjeto[]>> {
+    // Usa o mesmo método, já que ambos fazem a mesma coisa
+    return this.listarProjetos();
   }
 }
 
