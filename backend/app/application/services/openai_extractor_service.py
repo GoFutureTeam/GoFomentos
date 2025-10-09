@@ -38,26 +38,89 @@ class OpenAIExtractorService:
         self.chromadb_service = chromadb_service
         self.chunk_delay_ms = chunk_delay_ms
 
-    def _chunk_text(self, text: str, chunk_size: int = 3000, overlap: int = 300) -> List[str]:
+    def _chunk_text(self, text: str, chunk_size: int = 1500, overlap_sentences: int = 3) -> List[str]:
         """
-        Divide o texto em chunks com sobreposição.
+        Divide o texto em chunks semânticos, preservando contexto e estrutura.
+
+        ESTRATÉGIA HÍBRIDA:
+        1. Detecta seções maiores (CRONOGRAMA, ELEGIBILIDADE, etc.)
+        2. Quebra por parágrafos duplos (estrutura comum em editais)
+        3. Agrupa até atingir chunk_size sem quebrar parágrafos
+        4. Overlap semântico: repete últimas N sentenças do chunk anterior
 
         Args:
             text: Texto completo
-            chunk_size: Tamanho de cada chunk
-            overlap: Sobreposição entre chunks
+            chunk_size: Tamanho alvo de cada chunk (caracteres)
+            overlap_sentences: Número de sentenças a repetir entre chunks
 
         Returns:
-            List[str]: Lista de chunks
+            List[str]: Lista de chunks semânticos
         """
+        # 1. Normalizar quebras de linha
+        text = re.sub(r'\n{3,}', '\n\n', text)  # Múltiplas quebras -> dupla
+
+        # 2. Identificar blocos naturais (parágrafos ou seções)
+        # Tenta detectar seções com títulos em CAPS ou numerados
+        section_pattern = r'\n\n(?=[A-ZÇÃÕ\d][A-ZÇÃÕ\s\d\-:.]{5,}(?:\n|$))'
+        sections = re.split(section_pattern, text)
+
         chunks = []
-        start = 0
-        while start < len(text):
-            end = start + chunk_size
-            chunk = text[start:end]
-            chunks.append(chunk.strip())
-            start += chunk_size - overlap
-        return chunks
+        current_chunk = ""
+        previous_sentences = []
+
+        for section in sections:
+            # Quebrar seção em parágrafos
+            paragraphs = section.split('\n\n')
+
+            for paragraph in paragraphs:
+                paragraph = paragraph.strip()
+                if not paragraph:
+                    continue
+
+                # Se adicionar este parágrafo ultrapassa o limite
+                if len(current_chunk) + len(paragraph) > chunk_size and current_chunk:
+                    # Salvar chunk atual
+                    chunks.append(current_chunk.strip())
+
+                    # Extrair últimas N sentenças para overlap
+                    sentences = re.split(r'(?<=[.!?])\s+', current_chunk)
+                    previous_sentences = sentences[-overlap_sentences:] if len(sentences) > overlap_sentences else sentences
+
+                    # Iniciar novo chunk com overlap
+                    current_chunk = ' '.join(previous_sentences) + '\n\n' + paragraph
+                else:
+                    # Adicionar parágrafo ao chunk atual
+                    if current_chunk:
+                        current_chunk += '\n\n' + paragraph
+                    else:
+                        current_chunk = paragraph
+
+        # Adicionar último chunk
+        if current_chunk.strip():
+            chunks.append(current_chunk.strip())
+
+        # 3. Pós-processamento: chunks muito pequenos ou muito grandes
+        final_chunks = []
+        for chunk in chunks:
+            # Se chunk muito pequeno (<500 chars), tentar mesclar com anterior
+            if len(chunk) < 500 and final_chunks:
+                final_chunks[-1] += '\n\n' + chunk
+            # Se chunk muito grande (>3000 chars), forçar quebra por sentenças
+            elif len(chunk) > 3000:
+                sentences = re.split(r'(?<=[.!?])\s+', chunk)
+                temp_chunk = ""
+                for sent in sentences:
+                    if len(temp_chunk) + len(sent) > chunk_size and temp_chunk:
+                        final_chunks.append(temp_chunk.strip())
+                        temp_chunk = sent
+                    else:
+                        temp_chunk += ' ' + sent if temp_chunk else sent
+                if temp_chunk.strip():
+                    final_chunks.append(temp_chunk.strip())
+            else:
+                final_chunks.append(chunk)
+
+        return final_chunks if final_chunks else [text]
 
     def _merge_variables(self, accumulated: Dict, new: Dict) -> Dict:
         """

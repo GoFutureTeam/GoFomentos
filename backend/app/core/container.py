@@ -9,6 +9,7 @@ from ..infrastructure.persistence.mongodb.user_repository_impl import MongoUserR
 from ..infrastructure.persistence.mongodb.edital_repository_impl import MongoEditalRepository
 from ..infrastructure.persistence.mongodb.project_repository_impl import MongoProjectRepository
 from ..infrastructure.persistence.mongodb.job_repository_impl import MongoJobRepository
+from ..infrastructure.persistence.mongodb.conversation_repository_impl import ConversationRepositoryImpl
 from ..infrastructure.security.password_service import Argon2PasswordService
 from ..infrastructure.security.jwt_service import JWTService
 
@@ -22,6 +23,7 @@ from ..application.services.finep_scraper_service import FinepScraperService
 from ..application.services.openai_extractor_service import OpenAIExtractorService
 from ..application.services.job_scheduler_service import JobSchedulerService
 from ..application.services.chromadb_service import ChromaDBService
+from ..application.services.chat_service import ChatService
 
 # Use Cases - User
 from ..application.use_cases.user.create_user import CreateUserUseCase
@@ -88,6 +90,11 @@ class Container(containers.DeclarativeContainer):
         db_connection=mongodb_connection
     )
 
+    conversation_repository = providers.Factory(
+        ConversationRepositoryImpl,
+        database=mongodb_connection.provided.db
+    )
+
     # Use Cases - User
     create_user_use_case = providers.Factory(
         CreateUserUseCase,
@@ -133,7 +140,8 @@ class Container(containers.DeclarativeContainer):
     chromadb_service = providers.Singleton(
         ChromaDBService,
         chroma_host=settings.CHROMA_HOST,
-        chroma_port=settings.CHROMA_PORT
+        chroma_port=settings.CHROMA_PORT,
+        openai_api_key=settings.OPENAI_API_KEY  # ⭐ Passar API key para embeddings da OpenAI
     )
 
     # Application Services - Jobs
@@ -187,4 +195,17 @@ class Container(containers.DeclarativeContainer):
         finep_scraper_service=finep_scraper_service,
         openai_service=openai_extractor_service,
         pdf_processing_delay_ms=settings.JOB_PDF_PROCESSING_DELAY_MS
+    )
+
+    # Application Services - Chat (RAG)
+    chat_service = providers.Factory(
+        ChatService,
+        openai_api_key=settings.OPENAI_API_KEY,
+        chromadb_service=chromadb_service,
+        conversation_repository=conversation_repository,
+        model=settings.CHAT_MODEL,
+        temperature=settings.CHAT_TEMPERATURE,
+        top_k_chunks=settings.CHAT_TOP_K_CHUNKS,
+        max_context_length=settings.CHAT_MAX_CONTEXT_LENGTH,
+        distance_threshold=settings.CHAT_DISTANCE_THRESHOLD
     )

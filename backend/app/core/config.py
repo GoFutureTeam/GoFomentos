@@ -47,6 +47,13 @@ class Settings(BaseSettings):
     JOB_MAX_WORKERS: int = int(os.getenv("JOB_MAX_WORKERS", 2))  # Número de workers para jobs pesados
     JOB_CHUNK_DELAY_MS: int = int(os.getenv("JOB_CHUNK_DELAY_MS", 500))  # Delay entre chunks (ms)
     JOB_PDF_PROCESSING_DELAY_MS: int = int(os.getenv("JOB_PDF_PROCESSING_DELAY_MS", 1000))  # Delay entre PDFs (ms)
+
+    # Chat / RAG Settings
+    CHAT_MODEL: str = os.getenv("CHAT_MODEL", "gpt-4o-mini")  # Modelo OpenAI para chat
+    CHAT_TEMPERATURE: float = float(os.getenv("CHAT_TEMPERATURE", "0.3"))  # Criatividade da resposta (0-1)
+    CHAT_TOP_K_CHUNKS: int = int(os.getenv("CHAT_TOP_K_CHUNKS", 5))  # Chunks retornados ao LLM (reduzido para 5)
+    CHAT_MAX_CONTEXT_LENGTH: int = int(os.getenv("CHAT_MAX_CONTEXT_LENGTH", 10000))  # Limite de caracteres do contexto
+    CHAT_DISTANCE_THRESHOLD: float = float(os.getenv("CHAT_DISTANCE_THRESHOLD", "1.8"))  # Threshold para chunking semântico (1.8 = balanceado)
     
     @validator("OPENAI_API_KEY")
     def validate_openai_api_key(cls, v):

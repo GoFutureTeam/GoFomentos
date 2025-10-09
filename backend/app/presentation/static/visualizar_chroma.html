@@ -461,7 +461,11 @@
 
                 const html = data.results.map((result, index) => {
                     const meta = result.metadata || {};
-                    const relevance = result.distance ? (100 - (result.distance * 100)).toFixed(1) : '?';
+                    // Converter distance para relevância percentual
+                    // Distance 0.0 = 100% relevante, Distance 2.0 = 0% relevante
+                    const relevance = result.distance !== undefined
+                        ? Math.max(0, Math.min(100, (2.0 - result.distance) / 2.0 * 100)).toFixed(1)
+                        : '?';
 
                     return `
                         <div class="result-card">
