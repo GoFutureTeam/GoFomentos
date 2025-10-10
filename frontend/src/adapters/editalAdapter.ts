@@ -130,3 +130,79 @@ export function adaptEditalToBackend(frontendData: Partial<Edital>): Record<stri
     cooperacao: frontendData.cooperacao,
   };
 }
+
+/**
+ * Interface para o resultado do match vindo do backend
+ */
+export interface EditalMatchResult {
+  edital_uuid: string;
+  edital_name: string;
+  match_score: number;
+  match_percentage: number;
+  reasoning: string;
+  compatibility_factors: string[];
+  chunks_found: number;
+  edital_details?: {
+    orgao_responsavel?: string;
+    data_inicial_submissao?: string;
+    data_final_submissao?: string;
+    link?: string;
+  };
+}
+
+/**
+ * Interface para o formato esperado pelo MatchResults.tsx
+ */
+export interface MatchResultForDisplay {
+  id_edital: string;
+  id?: number;
+  titulo_edital: string;
+  titulo?: string;
+  orgao_responsavel?: string;
+  empresa?: string;
+  motivo: string;
+  descricao_resumida?: string;
+  descricao?: string;
+  score: number;
+  compatibilityScore?: number;
+  data_inicial_submissao?: string;
+  data_inicio_submissao?: string;
+  data_final_submissao?: string;
+  link?: string;
+}
+
+/**
+ * Adapta resultado do match do backend para o formato esperado pelo frontend
+ * Backend retorna: edital_uuid, edital_name, match_score, reasoning, etc
+ * Frontend espera: id_edital, titulo_edital, score, motivo, etc
+ */
+export function adaptMatchResultToDisplay(backendMatch: EditalMatchResult): MatchResultForDisplay {
+  return {
+    // Identificadores
+    id_edital: backendMatch.edital_uuid,
+    id: 0, // Não temos ID numérico, usar 0 como placeholder
+    
+    // Títulos
+    titulo_edital: backendMatch.edital_name,
+    titulo: backendMatch.edital_name,
+    
+    // Organização (pode vir em edital_details ou null)
+    orgao_responsavel: backendMatch.edital_details?.orgao_responsavel || 'Organização não informada',
+    empresa: backendMatch.edital_details?.orgao_responsavel || 'Organização não informada',
+    
+    // Score e reasoning
+    score: backendMatch.match_percentage,
+    compatibilityScore: backendMatch.match_percentage,
+    motivo: backendMatch.reasoning,
+    descricao_resumida: backendMatch.reasoning,
+    descricao: backendMatch.reasoning,
+    
+    // Datas (podem vir em edital_details ou null)
+    data_inicial_submissao: backendMatch.edital_details?.data_inicial_submissao,
+    data_inicio_submissao: backendMatch.edital_details?.data_inicial_submissao,
+    data_final_submissao: backendMatch.edital_details?.data_final_submissao,
+    
+    // Link
+    link: backendMatch.edital_details?.link,
+  };
+}

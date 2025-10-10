@@ -8,6 +8,10 @@ import { useProjetoPortugues } from '@/hooks/useProjetoPortugues';
 import { useAutenticacaoPortugues } from '@/hooks/useAutenticacaoPortugues';
 import { Button } from '@/components/ui/button';
 import { DadosProjeto } from '@/services/apiProjeto';
+import apiMatch from '@/services/apiMatch';
+import { adaptMatchResultToDisplay } from '@/adapters/editalAdapter';
+import { useToast } from '@/hooks/use-toast';
+import logger from '@/utils/logger';
 // REMOVIDO: Upload de documento não será usado na primeira versão
 // import { FileUpload } from '../FileUpload';
 
@@ -25,7 +29,9 @@ export const ProjectForm: React.FC<ProjetoProps> = ({ projetoInicial }) => {
   // REMOVIDO: Upload de documento não será usado na primeira versão
   // const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [projetoSalvo, setProjetoSalvo] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const navigate = useNavigate();
+  const { toast } = useToast();
   const { autenticado, usuario } = useAutenticacaoPortugues();
   const { salvarProjeto, salvando } = useProjetoPortugues();
   
@@ -81,8 +87,62 @@ export const ProjectForm: React.FC<ProjetoProps> = ({ projetoInicial }) => {
   };
   
   const onSubmit = async (data: ProjectFormData) => {
-    console.log('Analisando compatibilidade...', data);
-    // Implementar lógica de análise de compatibilidade aqui
+    logger.info('Iniciando análise de compatibilidade...', data);
+    setIsAnalyzing(true);
+    
+    try {
+      // Chamar a API de match com os dados do formulário
+      const matchRequest = {
+        titulo_projeto: data.projectTitle,
+        objetivo_principal: data.projectObjective,
+        nome_empresa: data.companyName || '',
+        resumo_atividades: data.companyActivities,
+        cnae: data.cnae,
+        ...(usuario?.id ? { user_id: usuario.id } : {}), // Adiciona user_id se usuário autenticado
+      };
+      
+      logger.info('Enviando requisição de match:', matchRequest);
+      const response = await apiMatch.matchProject(matchRequest);
+      
+      logger.info('Resposta do match recebida:', {
+        matchCount: response.matches.length,
+        executionTime: response.execution_time_seconds,
+        keywords: response.keywords_used,
+      });
+      
+      // Adaptar os resultados para o formato esperado pelo frontend
+      const adaptedMatches = response.matches.map(match => adaptMatchResultToDisplay(match));
+      
+      // Navegar para a página de resultados com os dados
+      navigate('/match-results', {
+        state: {
+          matches: adaptedMatches,
+          projectData: {
+            titulo: data.projectTitle,
+            objetivo: data.projectObjective,
+            empresa: data.companyName,
+            atividades: data.companyActivities,
+            cnae: data.cnae,
+          },
+        },
+      });
+      
+      toast({
+        title: "Análise concluída!",
+        description: `Encontramos ${response.matches.length} editais compatíveis com seu projeto.`,
+        variant: "default",
+      });
+    } catch (error) {
+      logger.error('Erro ao analisar compatibilidade:', error);
+      
+      toast({
+        title: "Erro na análise",
+        description: error instanceof Error ? error.message : "Não foi possível analisar a compatibilidade. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
   return (
@@ -225,7 +285,7 @@ export const ProjectForm: React.FC<ProjetoProps> = ({ projetoInicial }) => {
                   <button 
                     type="button" 
                     onClick={handleSaveProjeto}
-                    disabled={isSubmitting || salvando || projetoSalvo}
+                    disabled={isSubmitting || isAnalyzing || salvando || projetoSalvo}
                     className={`self-center flex items-center text-white font-semibold text-center justify-center px-[24px] py-[16px] rounded-[24px] max-md:px-4 transition-colors disabled:cursor-not-allowed text-base ${
                       projetoSalvo 
                         ? 'bg-gray-400 cursor-not-allowed' 
@@ -238,10 +298,10 @@ export const ProjectForm: React.FC<ProjetoProps> = ({ projetoInicial }) => {
                 
                 <button 
                   type="submit"
-                  disabled={isSubmitting}
-                  className="bg-[#DCF763] self-center flex items-center text-black font-extrabold text-center justify-center px-[30px] py-[21px] rounded-[28px] max-md:px-5 hover:bg-[#DCF763]/90 transition-colors disabled:opacity-50"
+                  disabled={isSubmitting || isAnalyzing}
+                  className="bg-[#DCF763] self-center flex items-center text-black font-extrabold text-center justify-center px-[30px] py-[21px] rounded-[28px] max-md:px-5 hover:bg-[#DCF763]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isSubmitting ? 'Analisando...' : 'Analisar Compatibilidade'}
+                  {isAnalyzing ? 'Analisando...' : 'Analisar Compatibilidade'}
                 </button>
               </div>
             </div>

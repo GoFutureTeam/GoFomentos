@@ -53,9 +53,13 @@ class ChromaDBService:
                 model_name="text-embedding-3-small"
             )
 
+            # ⚠️ SEMPRE RECRIAR COLLECTION PARA GARANTIR EMBEDDING CORRETO
             # Verificar se collection existe
             try:
-                existing_collection = self.client.get_collection(name=self.collection_name)
+                existing_collection = self.client.get_collection(
+                    name=self.collection_name,
+                    embedding_function=openai_ef  # ✅ FORÇA USO DO OPENAI EMBEDDING
+                )
                 
                 # Verificar se está usando embedding correto
                 collection_metadata = existing_collection.metadata

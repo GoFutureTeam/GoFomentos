@@ -56,6 +56,11 @@ export const API_ENDPOINTS = {
     EXECUTE_FAPESQ: `${API_VERSION}/jobs/fapesq/execute`,
   },
 
+  MATCH: {
+    PROJECT: `${API_VERSION}/match/project`,  // ✅ POST /api/v1/match/project
+    HEALTH: `${API_VERSION}/match/health`,    // ✅ GET /api/v1/match/health
+  },
+
   HEALTH: {
     CHECK: `/health`,  // ✅ GET /health (sem /api/v1)
   },
