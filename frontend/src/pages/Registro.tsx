@@ -67,20 +67,18 @@ const Registro: React.FC = () => {
         password: dados.senha
       });
       
-      // 2. Fazer login automaticamente
+      // 2. Fazer login automaticamente (já salva o token via TokenService)
       const resposta = await authApi.login({
         email: dados.email,
         password: dados.senha
       });
       
-      entrar(
-        {
-          id: resposta.user.id,
-          nome: resposta.user.name,
-          email: resposta.user.email
-        },
-        resposta.access_token
-      );
+      // Atualizar contexto apenas com dados do usuário (token já está salvo)
+      entrar({
+        id: resposta.user.id,
+        nome: resposta.user.name,
+        email: resposta.user.email
+      });
       
       toast({
         title: 'Cadastro realizado!',

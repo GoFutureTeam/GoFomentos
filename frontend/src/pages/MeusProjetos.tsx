@@ -5,8 +5,6 @@ import { useProjetoPortugues } from '@/hooks/useProjetoPortugues';
 import CommonHeader from '@/components/CommonHeader';
 import Footer from '@/components/details/Footer';
 import { Trash2 } from 'lucide-react';
-// Importando a imagem diretamente
-import backgroundImage from '@/assets/uploads/8a170130-d07b-497a-9e68-ec6bb3ce56bb.png';
 
 const MeusProjetos: React.FC = () => {
   const { projetos, carregando, excluirProjeto } = useProjetoPortugues();

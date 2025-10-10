@@ -2,12 +2,15 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Send } from 'lucide-react';
 import { useParams } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
+import chatService from '@/services/apiChat';
+import logger from '@/utils/logger';
 
 interface Message {
   id: string;
   text: string;
   isUser: boolean;
   timestamp: Date;
+  sources?: string[]; // IDs dos chunks (apenas para assistant)
 }
 
 const ChatInterface = () => {
@@ -15,10 +18,38 @@ const ChatInterface = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isExpanded, setIsExpanded] = useState(false);
-  const { id } = useParams<{ id: string }>();
+  const [conversationId, setConversationId] = useState<string | null>(null);
+  const [isCreatingConversation, setIsCreatingConversation] = useState(false);
+  const { id } = useParams<{ id: string }>(); // UUID do edital
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatSectionRef = useRef<HTMLElement>(null);
+
+  // Criar conversa ao montar o componente
+  useEffect(() => {
+    const initializeConversation = async () => {
+      if (conversationId || isCreatingConversation) return;
+
+      setIsCreatingConversation(true);
+      try {
+        logger.log('🎬 Inicializando conversa para edital:', id);
+        const conversation = await chatService.createConversation(id);
+        setConversationId(conversation.id);
+        logger.log('✅ Conversa criada:', conversation.id);
+      } catch (error) {
+        logger.error('❌ Erro ao criar conversa:', error);
+        toast({
+          title: "Erro",
+          description: "Não foi possível iniciar o chat. Tente recarregar a página.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsCreatingConversation(false);
+      }
+    };
+
+    initializeConversation();
+  }, [id, conversationId, isCreatingConversation, toast]);
 
   // Auto scroll to bottom when new messages are added
   useEffect(() => {
@@ -43,11 +74,21 @@ const ChatInterface = () => {
     e.preventDefault();
     if (!message.trim()) return;
 
+    // Verificar se tem conversa criada
+    if (!conversationId) {
+      toast({
+        title: "Erro",
+        description: "Chat ainda não está pronto. Aguarde um momento.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const userMessage: Message = {
       id: Date.now().toString(),
       text: message.trim(),
       isUser: true,
-      timestamp: new Date()
+      timestamp: new Date(),
     };
 
     // Add user message and expand chat
@@ -61,66 +102,40 @@ const ChatInterface = () => {
     setIsLoading(true);
     
     try {
-      // console.log('Enviando mensagem:', currentMessage);
-      // console.log('URL do webhook:', 'https://n8n.gofuture.unifacisa.edu.br/webhook/d24303b1-17a9-4223-ab1d-cf80f9396927');
+      logger.log('💬 Enviando mensagem para backend:', currentMessage);
       
-      const response = await fetch('https://n8n.gofuture.unifacisa.edu.br/webhook/d24303b1-17a9-4223-ab1d-cf80f9396927', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          editalId: id,
-          message: currentMessage,
-          timestamp: new Date().toISOString()
-        }),
+      // Chamar backend RAG
+      const result = await chatService.sendMessage(
+        conversationId,
+        currentMessage,
+        id // edital UUID
+      );
+
+      logger.log('✅ Resposta recebida do backend:', {
+        message_length: result.message.length,
+        sources: result.sources.length,
+        chunks_used: result.chunks_used,
       });
 
-      // console.log('Response status:', response.status);
-      // console.log('Response ok:', response.ok);
+      // Adicionar resposta do assistente
+      const assistantMessage: Message = {
+        id: result.timestamp,
+        text: result.message,
+        isUser: false,
+        timestamp: new Date(result.timestamp),
+        sources: result.sources, // IDs dos chunks usados
+      };
+      
+      setMessages(prev => [...prev, assistantMessage]);
 
-      if (response.ok) {
-        // Check if response is JSON or text
-        const contentType = response.headers.get('content-type');
-        let responseText = '';
-        
-        if (contentType && contentType.includes('application/json')) {
-          const responseData = await response.json();
-          // console.log('Response data (JSON):', responseData);
-          
-          if (typeof responseData === 'string') {
-            responseText = responseData;
-          } else if (responseData.response) {
-            responseText = responseData.response;
-          }
-        } else {
-          // Handle as plain text
-          responseText = await response.text();
-          // console.log('Response data (text):', responseText);
-        }
-        
-        // console.log('Final response text:', responseText);
-        
-        // Only add agent response if there's actually a response from n8n
-        if (responseText && responseText.trim()) {
-          const agentMessage: Message = {
-            id: (Date.now() + 1).toString(),
-            text: responseText,
-            isUser: false,
-            timestamp: new Date()
-          };
-          
-          setMessages(prev => [...prev, agentMessage]);
-        }
-      } else {
-        // console.log('Response não foi ok:', response.status);
-        throw new Error('Erro ao enviar mensagem');
-      }
     } catch (error) {
-      // console.error('Erro no catch:', error);
+      logger.error('❌ Erro ao enviar mensagem:', error);
+      
+      const errorMessage = error instanceof Error ? error.message : 'Não foi possível enviar sua mensagem. Tente novamente.';
+      
       toast({
         title: "Erro",
-        description: "Não foi possível enviar sua mensagem. Tente novamente.",
+        description: errorMessage,
         variant: "destructive",
       });
       
@@ -152,11 +167,12 @@ const ChatInterface = () => {
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Pergunte algo sobre o Edital"
-              className="flex-1 outline-none bg-transparent text-[#435058] placeholder:text-[#435058] text-sm sm:text-base"
+              disabled={isLoading || !conversationId}
+              className="flex-1 outline-none bg-transparent text-[#435058] placeholder:text-[#435058] text-sm sm:text-base disabled:opacity-50"
             />
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={isLoading || !conversationId}
               className="ml-3 sm:ml-4 hover:opacity-80 transition-opacity flex-shrink-0 p-1 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Send className="w-5 h-5 text-[#435058]" />
@@ -259,6 +275,9 @@ const ChatInterface = () => {
                     );
                   })}
                 </div>
+
+                {/* Fontes ocultas - dados disponíveis mas não exibidos */}
+                {/* {!msg.isUser && msg.sources && msg.sources.length > 0 && (...)} */}
               </div>
             </div>
           ))}
@@ -280,12 +299,13 @@ const ChatInterface = () => {
             type="text"
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            placeholder="Pergunte algo sobre o Edital da Saúde"
-            className="flex-1 outline-none bg-transparent text-[#435058] placeholder:text-gray-400 text-sm sm:text-base px-4 py-2"
+            placeholder="Pergunte algo sobre o Edital"
+            disabled={isLoading || !conversationId}
+            className="flex-1 outline-none bg-transparent text-[#435058] placeholder:text-gray-400 text-sm sm:text-base px-4 py-2 disabled:opacity-50"
           />
           <button
             type="submit"
-            disabled={isLoading}
+            disabled={isLoading || !conversationId}
             className="ml-2 hover:opacity-80 transition-opacity flex-shrink-0 p-2 bg-white rounded-full shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Send className="w-5 h-5 text-[#435058]" />

@@ -7,6 +7,8 @@
  * - Limpa tokens automaticamente quando expiram
  */
 
+import logger from '@/utils/logger';
+
 interface TokenPayload {
   sub: string; // email do usuário
   exp: number; // timestamp de expiração
@@ -35,7 +37,7 @@ class TokenService {
       localStorage.removeItem(this.REMEMBER_KEY);
     }
 
-    console.log('✅ Tokens salvos', { remember, storage: remember ? 'localStorage' : 'sessionStorage' });
+    logger.log('✅ Tokens salvos', { remember, storage: remember ? 'localStorage' : 'sessionStorage' });
   }
 
   /**
@@ -66,7 +68,7 @@ class TokenService {
     sessionStorage.removeItem(this.ACCESS_TOKEN_KEY);
     sessionStorage.removeItem(this.REFRESH_TOKEN_KEY);
 
-    console.log('🗑️ Tokens removidos');
+    logger.log('🗑️ Tokens removidos');
   }
 
   /**
@@ -80,7 +82,7 @@ class TokenService {
       // Considerar expirado se faltar menos de 30 segundos
       return payload.exp < (now + 30);
     } catch (error) {
-      console.error('❌ Erro ao decodificar token:', error);
+      logger.error('❌ Erro ao decodificar token:', error);
       return true;
     }
   }

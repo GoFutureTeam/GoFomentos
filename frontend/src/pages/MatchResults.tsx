@@ -2,11 +2,10 @@ import React, { useEffect } from 'react';
 import { useLocation, Navigate } from 'react-router-dom';
 import { MatchedEditalCard } from '@/components/match/MatchedEditalCard';
 import { MonitoringSignup } from '@/components/match/MonitoringSignup';
-import { ContactSection } from '@/components/match/ContactSection';
 import Footer from '@/components/details/Footer';
 import CommonHeader from '@/components/CommonHeader';
-import { MatchResult } from '@/hooks/useMatching';
 import { uploads } from '@/assets/uploads';
+import logger from '@/utils/logger';
 const MatchResults: React.FC = () => {
   const location = useLocation();
 
@@ -40,7 +39,7 @@ const MatchResults: React.FC = () => {
         };
       }
     } catch (error) {
-      console.error('Error retrieving stored data:', error);
+      logger.error('Error retrieving stored data:', error);
     }
     
     return { matches: [], projectData: null };
@@ -50,7 +49,6 @@ const MatchResults: React.FC = () => {
 
   // Se não há dados de matches válidos, redireciona para a página de match
   if (!Array.isArray(matches) || matches.length === 0) {
-    // console.log('MatchResults - No valid matches, redirecting to /matchs');
     return <Navigate to="/matchs" replace />;
   }
   return <div className="overflow-hidden">
@@ -80,8 +78,6 @@ const MatchResults: React.FC = () => {
           <MonitoringSignup projectData={projectData} />
         </div>
       </section>
-
-      <ContactSection />
       </main>
       
       <Footer />

@@ -3,6 +3,7 @@ import { fixEncoding } from '../lib/utils';
 import { API_ENDPOINTS, buildApiUrl } from './api';
 import { adaptEditalFromBackend, adaptEditalToBackend } from '../adapters/editalAdapter';
 import TokenService from './tokenService';
+import logger from '@/utils/logger';
 
 // Configuração da API
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8002';
@@ -68,7 +69,7 @@ class ServicoApiEdital {
       // Verificar se a resposta é HTML (indica erro de proxy/404)
       const tipoConteudo = resposta.headers.get('content-type');
       if (tipoConteudo && tipoConteudo.includes('text/html')) {
-        console.error(`API retornou HTML em vez de JSON para ${endpoint}. Status: ${resposta.status}`);
+        logger.error(`API retornou HTML em vez de JSON para ${endpoint}. Status: ${resposta.status}`);
         return {
           data: null as T,
           success: false,
@@ -81,7 +82,7 @@ class ServicoApiEdital {
       try {
         dados = await resposta.json();
       } catch (erroParser) {
-        console.error('Erro ao parsear JSON da resposta:', erroParser);
+        logger.error('Erro ao parsear JSON da resposta:', erroParser);
         return {
           data: null as T,
           success: false,
