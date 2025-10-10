@@ -9,8 +9,6 @@ import { useContextoEditaisPortugues } from '../hooks/useContextoEditaisPortugue
 import { FilterUpdate } from '../contexts/EditaisContextTypes';
 
 const Index = () => {
-  // console.log('📄 Index page carregando...');
-  
   const [currentPage, setCurrentPage] = useState(1);
   
   // Usar o contexto global de editais
@@ -23,23 +21,7 @@ const Index = () => {
     updateFilters
   } = useContextoEditaisPortugues();
 
-  // console.log('📊 Estado atual do contexto:', { 
-  //   editaisCount: editais?.length, 
-  //   isLoading, 
-  //   error,
-  //   totalCount,
-  //   editais: editais
-  // });
-
-  // console.log('🎯 Index - Condição de renderização:', {
-  //   isLoading,
-  //   'editais.length': editais?.length,
-  //   'Array.isArray(editais)': Array.isArray(editais),
-  //   'editais': editais
-  // });
-
   const handleFiltersChange = (newFilters: FilterUpdate) => {
-    // console.log('📄 Index recebeu mudança de filtros:', newFilters);
     updateFilters(newFilters);
     setCurrentPage(1);
   };

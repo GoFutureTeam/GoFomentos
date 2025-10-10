@@ -28,21 +28,18 @@ const Login: React.FC = () => {
   
   const aoEnviar = async (dados: DadosLogin) => {
     try {
-      // Chamada real à API
+      // Chamada real à API (já salva o token via TokenService)
       const resposta = await authApi.login({
         email: dados.email,
         password: dados.senha
       });
       
-      // Usar dados reais do backend
-      entrar(
-        {
-          id: resposta.user.id,
-          nome: resposta.user.name,
-          email: resposta.user.email
-        },
-        resposta.access_token
-      );
+      // Atualizar contexto apenas com dados do usuário (token já está salvo)
+      entrar({
+        id: resposta.user.id,
+        nome: resposta.user.name,
+        email: resposta.user.email
+      });
       
       toast({
         title: 'Login realizado com sucesso!',

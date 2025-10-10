@@ -1,13 +1,20 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
 import CommonHeader from '../components/CommonHeader';
-import ContentSection from '../components/details/ContentSection';
 import SidebarCard from '../components/details/SidebarCard';
 import ChatInterface from '../components/details/ChatInterface';
 import Footer from '../components/details/Footer';
 import { useEditalPortugues } from '../hooks/useEditaisPortugues';
 import { Skeleton } from '../components/ui/skeleton';
-import { uploads } from '../assets/uploads';
+import logger from '../utils/logger';
+import {
+  temValor,
+  formatarValor,
+  formatarMoeda,
+  formatarPercentual,
+  formatarBooleano,
+  formatarData,
+} from '../utils/formatters';
 
 const EditalDetails = () => {
   const {
@@ -15,7 +22,7 @@ const EditalDetails = () => {
   } = useParams<{ id: string }>();
   const editalUuid = id; // URL param 'id' now contains UUID string
   
-  console.log(`🎬 EditalDetails: Componente iniciado com UUID: ${editalUuid}`);
+  logger.log(`🎬 EditalDetails: Componente iniciado com UUID: ${editalUuid}`);
   
   const {
     edital,
@@ -26,58 +33,13 @@ const EditalDetails = () => {
     verificandoPdf: pdfChecking
   } = useEditalPortugues(editalUuid);
   
-  console.log(`📋 EditalDetails: Estado atual:`, {
+  logger.log(`📋 EditalDetails: Estado atual:`, {
     editalUuid,
     loading,
     error,
     hasEdital: !!edital,
     editalData: edital
   });
-
-  /**
-   * ✅ Helper para verificar se um valor deve ser exibido
-   */
-  const temValor = (valor: unknown): boolean => {
-    if (valor === null || valor === undefined) return false;
-    if (typeof valor === 'string' && valor.trim() === '') return false;
-    if (typeof valor === 'number' && isNaN(valor)) return false;
-    return true;
-  };
-
-  /**
-   * ✅ Helper para formatar valor ou retornar null
-   */
-  const formatarValor = (valor: unknown, formatador?: (v: unknown) => string): string | null => {
-    if (!temValor(valor)) return null;
-    return formatador ? formatador(valor) : String(valor);
-  };
-
-  /**
-   * ✅ Helper para formatar moeda
-   */
-  const formatarMoeda = (valor: number | null | undefined): string | null => {
-    if (!temValor(valor)) return null;
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    }).format(valor!);
-  };
-
-  /**
-   * ✅ Helper para formatar percentual
-   */
-  const formatarPercentual = (valor: number | null | undefined): string | null => {
-    if (!temValor(valor)) return null;
-    return `${valor}%`;
-  };
-
-  /**
-   * ✅ Helper para formatar booleano
-   */
-  const formatarBooleano = (valor: boolean | null | undefined): string | null => {
-    if (valor === null || valor === undefined) return null;
-    return valor ? 'Sim' : 'Não';
-  };
 
   /**
    * ✅ Componente para linha de informação condicional
@@ -99,7 +61,7 @@ const EditalDetails = () => {
   };
   
   if (loading) {
-    console.log(`⏳ EditalDetails: Renderizando loading state`);
+    logger.log(`⏳ EditalDetails: Renderizando loading state`);
     return <div className="min-h-screen">`
         <CommonHeader />
         <main className="container mx-auto px-4 py-8">
@@ -123,7 +85,7 @@ const EditalDetails = () => {
       </div>;
   }
   if (error || !edital) {
-    console.log(`❌ EditalDetails: Estado de erro ou edital não encontrado:`, { error, edital });
+    logger.log(`❌ EditalDetails: Estado de erro ou edital não encontrado:`, { error, edital });
     return <div className="min-h-screen">
         <CommonHeader />
         <main className="container mx-auto px-4 py-8">
@@ -150,7 +112,7 @@ const EditalDetails = () => {
   };
   const objectives = edital.descricao_completa ? extractObjectives(edital.descricao_completa) : [];
 
-  console.log(`🎯 EditalDetails: Edital carregado com sucesso:`, {
+  logger.log(`🎯 EditalDetails: Edital carregado com sucesso:`, {
     uuid: edital.uuid,
     apelido_edital: edital.apelido_edital,
     descricao_completa_length: edital.descricao_completa?.length || 0,

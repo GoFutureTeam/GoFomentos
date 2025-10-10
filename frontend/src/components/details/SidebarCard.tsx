@@ -121,8 +121,7 @@ const SidebarCard: React.FC<SidebarCardProps> = ({
         {edital.link ? (
           <a
             href={edital.link}
-            target="_blank"
-            rel="noopener noreferrer"
+            download
             className="w-full font-extrabold py-3 px-6 rounded-[28px] transition-colors bg-[#DCF763] hover:bg-[#DCF763]/90 text-black text-center block"
             onClick={() => console.debug('Link do PDF clicado:', edital.link)}
           >

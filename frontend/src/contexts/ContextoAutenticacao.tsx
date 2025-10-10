@@ -1,4 +1,6 @@
 import React, { createContext, useState, ReactNode, useEffect } from 'react';
+import TokenService from '../services/tokenService';
+import logger from '@/utils/logger';
 
 // Interface para o usuário
 export interface Usuario {
@@ -11,7 +13,7 @@ export interface Usuario {
 export interface ValorContextoAutenticacao {
   autenticado: boolean;
   usuario: Usuario | null;
-  entrar: (dadosUsuario: Usuario, token: string) => void;
+  entrar: (dadosUsuario: Usuario) => void;
   sair: () => void;
 }
 
@@ -19,36 +21,17 @@ export interface ValorContextoAutenticacao {
 export const ContextoAutenticacao = createContext<ValorContextoAutenticacao | undefined>(undefined);
 
 /**
- * Valida se o token JWT é válido e não expirou
- */
-const validarToken = (token: string | null): boolean => {
-  if (!token) return false;
-  
-  try {
-    // Decodifica o payload do JWT (parte do meio)
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    
-    // Verifica se o token não expirou (exp é em segundos)
-    const agora = Math.floor(Date.now() / 1000);
-    return payload.exp > agora;
-  } catch (erro) {
-    console.error('❌ Erro ao validar token:', erro);
-    return false;
-  }
-};
-
-/**
  * Provedor de autenticação para gerenciar o estado de autenticação global
  */
 export const ProvedorAutenticacao = ({ children }: { children: ReactNode }) => {
-  // Validar token na inicialização
-  const tokenInicial = localStorage.getItem('auth_token');
-  const tokenValido = validarToken(tokenInicial);
+  // Validar token na inicialização usando TokenService
+  const tokenInicial = TokenService.getAccessToken();
+  const tokenValido = tokenInicial ? !TokenService.isTokenExpired(tokenInicial) : false;
   
-  // Se token inválido, limpar localStorage
+  // Se token inválido, limpar tudo
   if (!tokenValido && tokenInicial) {
-    console.warn('⚠️ Token inválido ou expirado, limpando localStorage...');
-    localStorage.removeItem('auth_token');
+    logger.warn('⚠️ Token inválido ou expirado, limpando dados...');
+    TokenService.clearTokens();
     localStorage.removeItem('usuario');
   }
   
@@ -64,9 +47,9 @@ export const ProvedorAutenticacao = ({ children }: { children: ReactNode }) => {
 
   /**
    * Função para autenticar o usuário
+   * ✅ Token já é salvo pelo apiAuth.login() via TokenService
    */
-  const entrar = (dadosUsuario: Usuario, token: string) => {
-    localStorage.setItem('auth_token', token);
+  const entrar = (dadosUsuario: Usuario) => {
     localStorage.setItem('usuario', JSON.stringify(dadosUsuario));
     setUsuario(dadosUsuario);
     setAutenticado(true);
@@ -74,9 +57,10 @@ export const ProvedorAutenticacao = ({ children }: { children: ReactNode }) => {
 
   /**
    * Função para deslogar o usuário
+   * ✅ Limpa TODOS os tokens e dados do usuário
    */
   const sair = () => {
-    localStorage.removeItem('auth_token');
+    TokenService.clearTokens();
     localStorage.removeItem('usuario');
     setUsuario(null);
     setAutenticado(false);
@@ -85,11 +69,11 @@ export const ProvedorAutenticacao = ({ children }: { children: ReactNode }) => {
   // Verificar token periodicamente (a cada 30 segundos)
   useEffect(() => {
     const intervalo = setInterval(() => {
-      const token = localStorage.getItem('auth_token');
-      const valido = validarToken(token);
+      const token = TokenService.getAccessToken();
+      const valido = token ? !TokenService.isTokenExpired(token) : false;
       
       if (!valido && autenticado) {
-        console.warn('⚠️ Token expirou, fazendo logout automático...');
+        logger.warn('⚠️ Token expirou, fazendo logout automático...');
         sair();
       }
     }, 30000); // 30 segundos

@@ -1,4 +1,3 @@
-import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { EditaisProvider } from "./contexts/EditaisContext";
@@ -24,36 +23,34 @@ const App = () => {
   try {
     return (
       <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <ToastProvider>
-            <ProvedorAutenticacao>
-              <EditaisProvider>
-                <BrowserRouter>
-                  <Routes>
-                    {/* Rotas Públicas - Apenas Login, Cadastro e Esqueci Senha */}
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/registro" element={<Registro />} />
-                    <Route path="/esqueci-senha" element={<EsqueciSenha />} />
-                    <Route path="/recuperar-senha" element={<EsqueciSenha />} />
-                    
-                    {/* Rotas Protegidas (requerem autenticação) */}
-                    <Route element={<RotaProtegida />}>
-                      <Route path="/" element={<Index />} />
-                      <Route path="/edital/:id" element={<EditalDetails />} />
-                      <Route path="/meus-projetos" element={<MeusProjetos />} />
-                      <Route path="/matchs" element={<Matchs />} />
-                      <Route path="/match-results" element={<MatchResults />} />
-                      <Route path="/email-signup" element={<EmailSignup />} />
-                    </Route>
-                    
-                    {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </BrowserRouter>
-              </EditaisProvider>
-            </ProvedorAutenticacao>
-          </ToastProvider>
-        </TooltipProvider>
+        <ToastProvider>
+          <ProvedorAutenticacao>
+            <EditaisProvider>
+              <BrowserRouter>
+                <Routes>
+                  {/* Rotas Públicas - Apenas Login, Cadastro e Esqueci Senha */}
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/registro" element={<Registro />} />
+                  <Route path="/esqueci-senha" element={<EsqueciSenha />} />
+                  <Route path="/recuperar-senha" element={<EsqueciSenha />} />
+                  
+                  {/* Rotas Protegidas (requerem autenticação) */}
+                  <Route element={<RotaProtegida />}>
+                    <Route path="/" element={<Index />} />
+                    <Route path="/edital/:id" element={<EditalDetails />} />
+                    <Route path="/meus-projetos" element={<MeusProjetos />} />
+                    <Route path="/matchs" element={<Matchs />} />
+                    <Route path="/match-results" element={<MatchResults />} />
+                    <Route path="/email-signup" element={<EmailSignup />} />
+                  </Route>
+                  
+                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </BrowserRouter>
+            </EditaisProvider>
+          </ProvedorAutenticacao>
+        </ToastProvider>
       </QueryClientProvider>
     );
   } catch (error) {
