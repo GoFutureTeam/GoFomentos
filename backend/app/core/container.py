@@ -38,6 +38,9 @@ from ..application.use_cases.edital.get_editais import GetEditaisUseCase
 from ..application.use_cases.project.create_project import CreateProjectUseCase
 from ..application.use_cases.project.get_projects import GetProjectsUseCase
 
+# Use Cases - Match
+from ..application.use_cases.match.match_project_to_editais import MatchProjectToEditaisUseCase
+
 from .config import settings
 
 
@@ -208,4 +211,12 @@ class Container(containers.DeclarativeContainer):
         top_k_chunks=settings.CHAT_TOP_K_CHUNKS,
         max_context_length=settings.CHAT_MAX_CONTEXT_LENGTH,
         distance_threshold=settings.CHAT_DISTANCE_THRESHOLD
+    )
+
+    # Use Cases - Match
+    match_project_use_case = providers.Factory(
+        MatchProjectToEditaisUseCase,
+        chromadb_service=chromadb_service,
+        edital_repository=edital_repository,
+        openai_api_key=settings.OPENAI_API_KEY
     )

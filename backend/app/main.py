@@ -9,7 +9,7 @@ from pathlib import Path
 import uvicorn
 
 # Importar routers refatorados
-from .presentation.api.v1.endpoints import auth, users, editais, projects, health, chroma, jobs, chat
+from .presentation.api.v1.endpoints import auth, users, editais, projects, health, chroma, jobs, chat, match
 
 # Importar container singleton e configurações
 from .core.container_instance import container
@@ -120,6 +120,7 @@ app.include_router(projects.router, prefix="/api/v1", tags=["projects"])
 app.include_router(chroma.router, prefix="/api", tags=["chroma"])  # Sem v1 para compatibilidade com visualizer
 app.include_router(jobs.router, prefix="/api/v1", tags=["jobs"])
 app.include_router(chat.router, prefix="/api/v1", tags=["chat"])
+app.include_router(match.router, prefix="/api/v1", tags=["match"])
 
 
 # Rota raiz

@@ -53,18 +53,46 @@ class ChromaDBService:
                 model_name="text-embedding-3-small"
             )
 
-            self.collection = self.client.get_or_create_collection(
-                name=self.collection_name,
-                embedding_function=openai_ef,
-                metadata={
-                    "description": "Chunks de editais vetorizados",
-                    "embedding_model": "text-embedding-3-small",
-                    "embedding_provider": "OpenAI",
-                    "language": "pt-BR",
-                    "optimized_for": "technical documents in Portuguese"
-                }
-            )
-            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ✅ ChromaDB collection '{self.collection_name}' ready with OpenAI embeddings")
+            # Verificar se collection existe
+            try:
+                existing_collection = self.client.get_collection(name=self.collection_name)
+                
+                # Verificar se está usando embedding correto
+                collection_metadata = existing_collection.metadata
+                if collection_metadata and collection_metadata.get("embedding_provider") == "OpenAI":
+                    # Collection já usa OpenAI, pode usar
+                    self.collection = existing_collection
+                    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ✅ ChromaDB collection '{self.collection_name}' encontrada com OpenAI embeddings")
+                else:
+                    # Collection existe mas usa embedding errado, deletar e recriar
+                    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ⚠️ Collection existente usa embedding incorreto. Recriando com OpenAI...")
+                    self.client.delete_collection(name=self.collection_name)
+                    self.collection = self.client.create_collection(
+                        name=self.collection_name,
+                        embedding_function=openai_ef,
+                        metadata={
+                            "description": "Chunks de editais vetorizados",
+                            "embedding_model": "text-embedding-3-small",
+                            "embedding_provider": "OpenAI",
+                            "language": "pt-BR",
+                            "optimized_for": "technical documents in Portuguese"
+                        }
+                    )
+                    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ✅ ChromaDB collection '{self.collection_name}' recriada com OpenAI embeddings")
+            except Exception:
+                # Collection não existe, criar nova com OpenAI embeddings
+                self.collection = self.client.create_collection(
+                    name=self.collection_name,
+                    embedding_function=openai_ef,
+                    metadata={
+                        "description": "Chunks de editais vetorizados",
+                        "embedding_model": "text-embedding-3-small",
+                        "embedding_provider": "OpenAI",
+                        "language": "pt-BR",
+                        "optimized_for": "technical documents in Portuguese"
+                    }
+                )
+                print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ✅ ChromaDB collection '{self.collection_name}' criada com OpenAI embeddings")
         except Exception as e:
             print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ❌ Erro ao conectar ChromaDB: {e}")
             raise
